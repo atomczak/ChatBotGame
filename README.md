@@ -1,2 +1,1 @@
-# ChatBotGame
-Tests of a chatbot game project.
+Work in progress version of a chatbot game.
