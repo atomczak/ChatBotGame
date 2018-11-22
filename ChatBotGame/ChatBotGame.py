@@ -1,8 +1,8 @@
-#Python libraries that we need to import for our bot
 import random
 from flask import Flask, request
 from pymessenger.bot import Bot
 
+#create a Flask app that will connect with fb:
 app = Flask(__name__)
 ACCESS_TOKEN = 'EAADioxWNLLMBAK9PGz1bkFdwbVZB7ezmap4YBt0x3MLNVdpbUwjkncpGC19er7AhJtoENCZBewGbWIPb2MxJ690OUQiWOYWKv6yLgZBPjE80vYzQuemGVxq6BkzpJZBty7ZANoNeZADJsklL3dmHkYz4NU4cU7Pk3C3zcIrSZCIswZDZD'
 VERIFY_TOKEN = 'HasloOkon2018'
