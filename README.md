@@ -1,23 +1,21 @@
 ___ProjectWiki_______________________________________
 
-Flask    stawia lokalnie stronke i obsługuje GET i POST
-ngrok    żeby udostępnic lokalną stronke do testow online
-
 Info:
-- 'code'			zawiera
-- 'resources'		zawiera materiały potrzebne do funkcjonowania: grafiki, słowniki itp.
--	'ngrok.exe'	appka do postawienia serwera w siecie na czas testów (8h)
-- 'tests'			zawiera
-- 'data'			bazy danych(?)
-- 'ChatBotGame.py'	faktyczna applikacja
-- '__init__'		https://stackoverflow.com/questions/448271/what-is-init-py-for
+- 'code'			contains all the neccesarry methods and classes
+- 'resources'		contains all media like json dictionaries, graphics, etc.
+- 'tests'			set of tests written for particular parts of the app
+- 'ChatBotGame.py'	the app itselfs
+- '__init__'		to treat repo as a library https://stackoverflow.com/questions/448271/what-is-init-py-for
 - TODO			tasks to be done can be found in Github/Projects/Todo
+
+Modules:
+- Flask  deploys local website to handle GET and POST
+- ngrok.exe    deploys local server to http for limited time of testing
 
 
 ___HowToRun_______________________________________
-1. odpal 'ChatBotGame.py'
-2. odpal ngrok.exe
-3. w oknie ngrok wpisz: ngrok http 5000
-   (lub inny numer bedacy koncowka adresu local host z pkt1)
-4. skopiuj Forwarding https... do Facebook developers
-   np. https://280e58b1.ngrok.io
+1. run 'ChatBotGame.py'
+2. run ngrok.exe
+3. in the ngrok console type: ngrok http 5000
+   (or other end of local host address)
+4. copy 'Forwarding https...' and paste on Facebook developers website (e.g. https://280e58b1.ngrok.io)
