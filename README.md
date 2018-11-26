@@ -11,6 +11,8 @@ Info:
 'data'			bazy danych(?)
 'ChatBotGame.py'	faktyczna applikacja
 '__init__'		https://stackoverflow.com/questions/448271/what-is-init-py-for
+TODO			tasks to be done can be found in Github/Projects/Todo
+
 
 ___HowToRun_______________________________________
 1. odpal 'ChatBotGame.py'
@@ -19,6 +21,3 @@ ___HowToRun_______________________________________
    (lub inny numer bedacy koncowka adresu local host z pkt1)
 4. skopiuj Forwarding https... do Facebook developers
    np. https://280e58b1.ngrok.io
-
-___TODO_____________________________________________
-*moved todo to github project tasks*
