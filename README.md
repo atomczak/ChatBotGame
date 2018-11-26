@@ -4,14 +4,14 @@ Flask    stawia lokalnie stronke i obsługuje GET i POST
 ngrok    żeby udostępnic lokalną stronke do testow online
 
 Info:
-'code'			zawiera
-'resources'		zawiera materiały potrzebne do funkcjonowania: grafiki, słowniki itp.
-	'ngrok.exe'	appka do postawienia serwera w siecie na czas testów (8h)
-'tests'			zawiera
-'data'			bazy danych(?)
-'ChatBotGame.py'	faktyczna applikacja
-'__init__'		https://stackoverflow.com/questions/448271/what-is-init-py-for
-TODO			tasks to be done can be found in Github/Projects/Todo
+- 'code'			zawiera
+- 'resources'		zawiera materiały potrzebne do funkcjonowania: grafiki, słowniki itp.
+-	'ngrok.exe'	appka do postawienia serwera w siecie na czas testów (8h)
+- 'tests'			zawiera
+- 'data'			bazy danych(?)
+- 'ChatBotGame.py'	faktyczna applikacja
+- '__init__'		https://stackoverflow.com/questions/448271/what-is-init-py-for
+- TODO			tasks to be done can be found in Github/Projects/Todo
 
 
 ___HowToRun_______________________________________
