@@ -1,16 +1,16 @@
 ___ProjectWiki_______________________________________
 
 Info:
-- 'code'			contains all the neccesarry methods and classes
-- 'resources'		contains all media like json dictionaries, graphics, etc.
-- 'tests'			set of tests written for particular parts of the app
-- 'ChatBotGame.py'	the app itselfs
-- '__init__'		to treat repo as a library https://stackoverflow.com/questions/448271/what-is-init-py-for
-- TODO			tasks to be done can be found in Github/Projects/Todo
+- 'code' - contains all the neccesarry methods and classes
+- 'resources' - contains all media like json dictionaries, graphics, etc.
+- 'tests' - set of tests written for particular parts of the app
+- 'ChatBotGame.py' - the app itselfs
+- '__init__' - to treat repo as a library https://stackoverflow.com/questions/448271/what-is-init-py-for
+- TODO - tasks to be done can be found in Github/Projects/Todo
 
 Modules:
-- Flask  deploys local website to handle GET and POST
-- ngrok.exe    deploys local server to http for limited time of testing
+- Flask - deploys local website to handle GET and POST
+- ngrok.exe - deploys local server to http for limited time of testing
 
 
 ___HowToRun_______________________________________
