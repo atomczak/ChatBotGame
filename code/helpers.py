@@ -7,39 +7,16 @@ from difflib import get_close_matches
 #Prepare an answer, based on the user message:
 def botResponse(userAns, entity=""):
     if entity == "" or entity is None:
-        entity = regExPatternMatcher(userAns)
-    response = responder(entity, userAns)
+        entity = regExPatternMatcher(userAns)   #no entity from NLP so try to find with regex
+    if entity == "koko":
+        #encyclopedia
+        pass
+    response = responder(entity, userAns)   #prepare the response based on the entity given
     if type(response) == list:
         response = random.choice(response)
     #if response[0:5] == "PIC:": #TODO
     #elif response[0:5] == "GIF:": #TODO
     return response
-
-"""
-#Answer with the definition of the word from the dictionary:
-output = translate(word)
-if output[0] == "CloseMatch":
-    ...
-elif type(output) == list:
-    for item in output:
-        print("BOT: " + item)
-else:
-    print("BOT: " + output)
-
-if w in data:
-    return data[w]
-elif len(get_close_matches(w, data.keys())) > 0:
-    print("BOT: Did you mean %s instead?" % get_close_matches(w, data.keys())[0])
-    yn = input("YOU: ")
-    if yn.lower() == "y" or yn.lower() == "yes" or yn.lower() == "":
-        return data[get_close_matches(w, data.keys())[0]]
-    elif yn.lower() == "n" or yn.lower() == "no":
-        return "then I have no idea what it is..."
-    else:
-        return "pardon?"
-else:
-    return "I'm confused, what is it?"
-"""
 
 #Regular Expression pattern finder that searches for intents from patternDictionary:
 def regExPatternMatcher(str):
@@ -56,31 +33,21 @@ def regExPatternMatcher(str):
     return intent
 
 #Set of intents and patterns to recognize them:
-"""
-patternDictionary = {
-        'greetings': [r'\b(hi|h[ea]+l+?o|h[ea]+[yj]+|yo+|welcome|(good)?\s?(morning?|evenin?)|hola|howdy|shalom|salam|czesc|witaj|siemk?a|marhaba|salut)\b', r'(\🖐|\🖖|\👋|\🤙)'],     #🖐🏻,🖖🏻,👋🏻,🤙🏻,🖐🏼,🖖🏼,👋🏼,🤙🏼,🖐🏽,🖖🏽,👋🏽,🤙🏽,🖐🏾,🖖🏾,👋🏾,🤙🏾,🖐🏿,🖖🏿,👋🏿,🤙🏿
-        'yes': [r'\b(yes|si|ok|kk|ok[ae]y|confirm)\b',r'(\✔️|\☑️|\👍|\👌)'],    #👍🏻,👌🏻,👍🏼,👌🏼,👍🏽,👌🏽,👍🏾,👌🏾,👍🏿,👌🏿
-        'no': [r'\b(n+o+|decline|negative|n+o+pe)\b', r'\👎'],    #👎🏻,👎🏼,👎🏽,👎🏾,👎🏿
-        'maybe' : r'\b(don\'?t\sknow?|maybe|perhaps?|not\ssure|y+)\b',
-        'curse' : [r'\b(fuck|kurwa)\b', r'pierd[oa]l', r'\bass', r'\🖕'],  #🖕🏻,🖕🏼,🖕🏽,🖕🏾,🖕🏿
-        'uname?' : [r'y?o?ur\sname\??', r'(how|what)[\s\S]{1,15}call(ing)?\sy?o?u\??'],
-        'ureal?' : r'\by?o?u\s(real|true|bot|ai|human|person|man)\b',
-        "secret" : r'(secret|password|key)',
-        "love" : [r'love',r'(\❤️|\🧡|\💛|\💚|\💙|\💜|\🖤)'],
-        'bye': r'(bye|exit|quit|end)'
-    }
-"""
-
 patternDictionary = {
         'greetings': [r'\b(hi|h[ea]+l+?o|h[ea]+[yj]+|yo+|welcome|(good)?\s?(morning?|evenin?)|hola|howdy|shalom|salam|czesc|witaj|siemk?a|marhaba|salut)\b'],
+        #'greetings': [r'\b(hi|h[ea]+l+?o|h[ea]+[yj]+|yo+|welcome|(good)?\s?(morning?|evenin?)|hola|howdy|shalom|salam|czesc|witaj|siemk?a|marhaba|salut)\b', r'(\🖐|\🖖|\👋|\🤙)'],     #🖐🏻,🖖🏻,👋🏻,🤙🏻,🖐🏼,🖖🏼,👋🏼,🤙🏼,🖐🏽,🖖🏽,👋🏽,🤙🏽,🖐🏾,🖖🏾,👋🏾,🤙🏾,🖐🏿,🖖🏿,👋🏿,🤙🏿
         'yes': r'\b(yes|si|ok|kk|ok[ae]y|confirm|good)\b',
+        #'yes': [r'\b(yes|si|ok|kk|ok[ae]y|confirm)\b',r'(\✔️|\☑️|\👍|\👌)'],    #👍🏻,👌🏻,👍🏼,👌🏼,👍🏽,👌🏽,👍🏾,👌🏾,👍🏿,👌🏿
         'no': r'\b(n+o+|decline|negative|n+o+pe)\b',
+        #'no': [r'\b(n+o+|decline|negative|n+o+pe)\b', r'\👎'],    #👎🏻,👎🏼,👎🏽,👎🏾,👎🏿
         'maybe' : r'\b(don\'?t\sknow?|maybe|perhaps?|not\ssure|y+)\b',
         'curse' : [r'\b(fuck|kurwa)\b', r'pierd[oa]l', r'\bass'],
+        #'curse' : [r'\b(fuck|kurwa)\b', r'pierd[oa]l', r'\bass', r'\🖕'],  #🖕🏻,🖕🏼,🖕🏽,🖕🏾,🖕🏿
         'uname?' : [r'y?o?ur\sname\??', r'(how|what)[\s\S]{1,15}call(ing)?\sy?o?u\??'],
         'ureal?' : r'\by?o?u\s(real|true|bot|ai|human|person|man)\b',
         "secret" : r'(secret|password|key)',
         "love" : r'love',
+        #"love" : [r'love',r'(\❤️|\🧡|\💛|\💚|\💙|\💜|\🖤)'],
         'bye': r'(bye|exit|quit|end)'
     }
 
@@ -151,16 +118,56 @@ def bestMatchEntity(message):
     except:
         return None
 
-def translate(w):
-    data = json.load(open("../resources/Encyclopedia.json"))    #moze lepiej zeby to sie otwierało raz - przy starcie apki?
-    w = w.lower()
-    if w in data:
-        return data[w]
-    elif len(get_close_matches(w, data.keys())) > 0:
-        return ["CloseMatch", data[get_close_matches(w, data.keys())[0]], data[get_close_matches(w, data.keys())[1]]]
+#Lookup the definition of the word in the dictionary:
+def translate(word):
+    encyclopedia = json.load(open("../resources/Encyclopedia.json"))    #TODO moze lepiej zeby takie rzeczy się otwierało raz - przy starcie apki?
+    word = word.lower()
+    if word in encyclopedia:
+        return encyclopedia[word]
+    elif len(get_close_matches(word, encyclopedia.keys())) > 0:
+        return ["CloseMatch", encyclopedia[get_close_matches(word, encyclopedia.keys())[0]], encyclopedia[get_close_matches(w, encyclopedia.keys())[1]]]
 
+#Lookup the definition of the word in the dictionary:
+def guessSong(userAns):
+    lyrics = json.load(open("../rest/billboard-data/years/1984.json"))   #TODO moze lepiej zeby takie rzeczy się otwierało raz - przy starcie apki?
+    userAns = userAns.lower()
+    for song in lyrics:
+        if userAns in song['lyrics']:
+            print("Oh, you mean that {0} song by {1}? I think '{2}' was the name".format(song['year'],song['artist'],song['title']))
+            print("'"+song['lyrics'].split("\n")[0])
+            print(song['lyrics'].split("\n")[1])
+            print(song['lyrics'].split("\n")[1]+"'")
+
+    #elif len(get_close_matches(userAns, lyrics)) > 0:
+    #    return ["CloseMatch", lyrics[get_close_matches(userAns, lyrics)[0]], lyrics[get_close_matches(userAns, lyrics)[1]]]
+
+"""
+#Answer with the definition of the word from the dictionary:
+output = translate(word)
+if output[0] == "CloseMatch":
+    ...
+elif type(output) == list:
+    for item in output:
+        print("BOT: " + item)
+else:
+    print("BOT: " + output)
+
+if w in data:
+    return data[w]
+elif len(get_close_matches(w, data.keys())) > 0:
+    print("BOT: Did you mean %s instead?" % get_close_matches(w, data.keys())[0])
+    yn = input("YOU: ")
+    if yn.lower() == "y" or yn.lower() == "yes" or yn.lower() == "":
+        return data[get_close_matches(w, data.keys())[0]]
+    elif yn.lower() == "n" or yn.lower() == "no":
+        return "then I have no idea what it is..."
+    else:
+        return "pardon?"
+else:
+    return "I'm confused, what is it?"
+"""
 #take token sent by facebook and verify if it matches:
-"''def verify_fb_token(token_sent):
+def verify_fb_token(token_sent):
     if token_sent == VERIFY_TOKEN:
         return request.args.get("hub.challenge")
     return 'Invalid verification token'

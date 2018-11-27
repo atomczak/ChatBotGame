@@ -1,14 +1,11 @@
 """
 Use this command line bot to test bot conversational abilities
 """
-
 import random
 import json
 import sys
 sys.path.append('../code')
 from helpers import *
-
-#response = random.choice(response)
 
 print(" --- beginning of the new conversation (say 'bye' to exit) --- ")
 
