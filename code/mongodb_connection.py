@@ -69,6 +69,14 @@ def update_player(facebook_id, first_name=None, last_name=None, sex=None, times_
     if times_won is not None:
         query.update_one(set__times_won=query[0].times_won + times_won)
 
+def update_player_results(facebook_id, times_won=None):
+    """A function used to update player results.
+    Content is similar to update_player function, but it's a bit quicker."""
+    query = Player.objects(facebook_id=facebook_id)  # finds the specific record via facebook_id
+    query.update_one(set__times_played=query[0].times_played + 1)
+    if times_won == 1:
+        query.update_one(set__times_won=query[0].times_won + 1)
+
 
 def add_conversation(facebook_id, who_said_it, message_content, message_timestamp=None, message_intent=None):
     """A function used to add a conversation to the specific player """
@@ -90,5 +98,3 @@ def find_player(facebook_id):
 
 
 setup_database_connection()
-player_conversations = find_player('Test').conversations
-for conversation in player_conversations: print(conversation.message_content)
