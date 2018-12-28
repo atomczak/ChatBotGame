@@ -1,5 +1,6 @@
 """
 Use this command line bot to test bot conversational abilities
+It does not use NLP (yet).
 """
 import random
 import json
@@ -7,15 +8,20 @@ import sys
 sys.path.append('../code')
 from helpers import *
 
+print("")
 print(" --- beginning of the new conversation (say 'bye' to exit) --- ")
+print("")
 
 while True:
     userAns = input("YOU: ")
     userAns = userAns.lower()
     if "bye" in userAns:
         print("BOT: goodbye :)")
+        print("")
         print(" --- end of the conversation --- ")
+        print("")
         break
     else:
-        response = botResponse(userAns, "")    #second argument would be the entity
+        entity = best_match_entity(userAns)
+        response = bot_response(userAns, entity)    #second argument would be the entity
         print("BOT: " + response)

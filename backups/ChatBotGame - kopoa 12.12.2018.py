@@ -2,13 +2,13 @@
 import random
 from flask import Flask, request
 from pymessenger.bot import Bot
-from helpers import *
+from code import helpers
 import json
 
 app = Flask(__name__)
-#Tokens below should match the ones staeted on Facebook Messenger Developers website:
-ACCESS_TOKEN = 'EAADioxWNLLMBAK9PGz1bkFdwbVZB7ezmap4YBt0x3MLNVdpbUwjkncpGC19er7AhJtoENCZBewGbWIPb2MxJ690OUQiWOYWKv6yLgZBPjE80vYzQuemGVxq6BkzpJZBty7ZANoNeZADJsklL3dmHkYz4NU4cU7Pk3C3zcIrSZCIswZDZD'
-VERIFY_TOKEN = 'HasloOkon2018'
+# Tokens below should match the ones staeted on Facebook Messenger Developers website:
+ACCESS_TOKEN = 'EAAIuhhHJXv4BAEZC9KavjOIwgQbsBWvqkpwfWb3UlmNyDUhqssdM4AQWTmhaoUdZAAZCU8rHSqt9E2BMrWhKQm1ZA55mg3evN2iTjI9ZCs6LnxSzZAN4vapCTCTv93YZAB3qAIrEnlZB3XKK3bZCRlpNP1ToOZBOQL7VkZAW1innPncpAZDZD'
+VERIFY_TOKEN = 'Q6ZskF4csJyvAEMnF9ua'   #hasło podane na fb dev w sekcji webhooks
 bot = Bot(ACCESS_TOKEN)
 bot_id = 302799017185129 #spisane dla 'Test GameBot #2'
 artur_id = 2321541911195477
