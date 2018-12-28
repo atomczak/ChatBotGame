@@ -1,0 +1,4 @@
+username = JakubTurbakiewicz
+password = <password>
+address = @ds119663.mlab.com:19663
+database_name = players_text_game_database
