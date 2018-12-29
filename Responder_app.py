@@ -12,6 +12,12 @@ app = Flask(__name__)
 @app.route("/", methods=['GET', 'POST'])
 
 def receive_message():
+
+    print('')
+    print('[LOG] Server got a message:')
+    print(str(request))
+    print('')
+
     if request.method == 'GET':             # if type is 'GET' it means FB wants to verify tokens
         token_sent = request.args.get("hub.verify_token")
         return verify_fb_token(token_sent)

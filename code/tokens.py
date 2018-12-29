@@ -6,3 +6,9 @@ verification = 'Q6ZskF4csJyvAEMnF9ua'   #haslo podane na fb dev w sekcji webhook
 bot_id = '1368143226655403'
 artur_id = '2231584683532589'
 kuba_id = '2410700988971224'
+
+# DB Connection data:
+username = 'JakubTurbakiewicz'
+password = '<password>'
+address = '@ds119663.mlab.com:19663'
+database_name = 'players_text_game_database'
