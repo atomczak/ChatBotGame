@@ -4,6 +4,7 @@
 from flask import Flask, request
 from code.helpers import *
 import json
+import pprint
 
 #initiate the web app
 app = Flask(__name__)
@@ -15,7 +16,7 @@ def receive_message():
 
     print('')
     print('[LOG] Server got a message:')
-    print(str(request))
+    pprint.pprint(request.get_json())
     print('')
 
     if request.method == 'GET':             # if type is 'GET' it means FB wants to verify tokens

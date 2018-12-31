@@ -1,3 +1,5 @@
+import random
+
 #Set of intents and patterns to recognize them:
 pattern_dictionary = {
         'greetings': [r'\b(hi|h[ea]+l+?o|h[ea]+[yj]+|yo+|welcome|(good)?\s?(morning?|evenin?)|hola|howdy|shalom|salam|czesc|witaj|siemk?a|marhaba|salut)\b'],

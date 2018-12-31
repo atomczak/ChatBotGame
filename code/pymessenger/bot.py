@@ -296,7 +296,7 @@ class Bot:
             }
         }, notification_type)
 
-
+    
     def get_user_info(self, recipient_id, fields=None):
         """Getting information about the user
         https://developers.facebook.com/docs/messenger-platform/user-profile

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -11,19 +11,25 @@ import random
 from pymessenger.bot import Bot
 import json
 from difflib import get_close_matches
-#from code import tokens
-import tokens
+#import tokens
+from code import tokens
+from code import mongodb_connection as mng
+from code.resources import *
 from flask import Flask, request
 from datetime import date
-from resources import *
 from time import sleep
 
 #initiate the pymessenger bot object
-bot = Bot(tokens.access)
+bot = Bot(tokens.fb_access)
+
+#fetch user ids from the DB:
+users = []
+for user in mng.Player.objects():
+    users.append(user.facebook_id)
 
 #take token sent by facebook and verify if it matches:
 def verify_fb_token(token_sent):
-    if token_sent == tokens.verification:
+    if token_sent == tokens.fb_verification:
         return request.args.get("hub.challenge")
         print("[LOG-VERI] Token verification succesfull.")
     else:
@@ -34,13 +40,15 @@ def handle_messages(user_message):
     for event in user_message['entry']:
         messaging = event['messaging']
         for message in messaging:
-            uid = message['sender']['id']   #recipient id
+            uid = message['sender']['id']   #sender, thus our recipient id
             if message.get('message'):
+                mark_seen(uid)
+                add_new_user(uid)
                 #Facebook Messenger ID for user so we know where to send response back to
                 msg = message['message']
-                if int(uid) != int(tokens.bot_id):
-                    fake_typing(uid, 3)
-                    get_user_info(uid)
+                if int(uid) != int(tokens.fb_bot_id):
+                    fake_typing(uid, 1)
+                    #bot.get_user_info(uid)
                     if msg.get('text'):
                         handle_text(msg, uid)
                     elif msg.get('sticker_id'):
@@ -48,29 +56,43 @@ def handle_messages(user_message):
                     elif msg.get('attachments'):
                         handle_attachment(msg, uid)
             elif message.get('delivery'):
-                print("[LOG-DELI] Message from #{0} delivered to #{1}.".format(str(uid)[0:4], str(uid)[0:4]))
+                print("[LOG-DELI] Message from #{0} delivered to #{1}.".format(str(uid)[0:4], str(message['recipient']['id'])[0:4]))
             elif message.get('read'):
-                print("[LOG-SEEN] Message from #{0} read by #{1}.".format(str(uid)[0:4], str(uid)[0:4]))
+                print("[LOG-SEEN] Message from #{0} read by #{1}.".format(str(uid)[0:4], str(message['recipient']['id'])[0:4]))
 
-#react when the user sends some text
+def add_new_user(user_id):
+    if user_id not in users:    # add new user
+        #get_user_info(bot,uid)  #first_name TODO
+        mng.create_player(user_id)
+    else:                       # user already in the DB - collect info
+        mng.find_player(user_id).first_name
+        #TODO
+
+# react when the user sends some text
 def handle_text(msg, uid):
-    print("[LOG-MESG] User #{0} said: '{1}'.".format(str(uid)[0:4], str(msg.get('text'))))
     entity = best_match_entity(msg)
+    print("[LOG-MESG] User #{0} said: '{1}' and I recognize it as: {2}.".format(str(uid)[0:4], str(msg.get('text')), entity))
     response = bot_response(msg.get('text'), entity)
     send_message(uid, response)
+    mng.add_conversation(uid,True,msg.get('text'))     # True=human, False=bot
+    mng.add_conversation(uid,False,response)           # True=human, False=bot
 
 #react when the user sends a sticker
 def handle_sticker(msg, uid):
-    print("[LOG-MESG] User #{0} sent sticker.".format(str(uid)[0:4]))
+    print("[LOG-MESG] User #{0} sent a sticker.".format(str(uid)[0:4]))
     response = recognize_sticker(str(msg.get('sticker_id')))
     send_message(uid, response)
+    mng.add_conversation(uid,True,'Some sticker')     # True=human, False=bot
+    mng.add_conversation(uid,False,response)           # True=human, False=bot
 
 #react when the user sends a GIFs, photos, videos, or any other non-text item:
 def handle_attachment(msg, uid):
-    print("[LOG-MESG] User #{0} sent gif.".format(str(uid)[0:4]))
+    print("[LOG-MESG] User #{0} sent a gif.".format(str(uid)[0:4]))
     #Send funny gif:
     image_url = r'https://media.giphy.com/media/L7ONYIPYXyc8/giphy.gif'
-    send_image(recipient_id, image_url)
+    send_image(uid, image_url)
+    mng.add_conversation(uid,True,'Some attachment (GIF)')     # True=human, False=bot
+    mng.add_conversation(uid,False,'GIF with a guy.')           # True=human, False=bot
 
 def send_message(recipient_id, response):
     if type(response) == list: response = random.choice(response)
@@ -83,8 +105,11 @@ def send_image(recipient_id, image_url):
     #bot.send_image(recipient_id, r'C:\Users\Artur\Desktop\CODE\Chatbot Game\resources\CogitoErgoSum.jpg')
     print("[LOG-RESP] Bot has answered with a funny picture.")
 
-def fake_typing(recipient_id, duration=3):
+def mark_seen(recipient_id):
     bot.send_action(recipient_id, 'mark_seen')
+
+def fake_typing(recipient_id, duration=2):
+    sleep(duration/2)
     bot.send_action(recipient_id, 'typing_on')
     sleep(duration)
     bot.send_action(recipient_id, 'typing_off')

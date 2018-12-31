@@ -1,21 +1,16 @@
 from mongoengine import *
 import datetime
-
+from code import tokens
 
 def setup_database_connection():
     """The function sets up the MongoDB database connection. Due to the public Github page, at the moment the
     connection information is read from the file, not included in the repository"""
-
-    with open('DB_Connection_Data.txt') as db_connection_data:  # reads the file saved in the current dir
-        input_data = db_connection_data.readlines()
-        output_db_data = []
-        for line in input_data:  # cleaning of the read file
-            split_line = line.split(' = ')[1]
-            cleaned_line = split_line.replace("\n", "")
-            output_db_data.append(cleaned_line)
     # sets up the connection: http: // docs.mongoengine.org / guide / connecting.html
-    connect(output_db_data[3], host=('mongodb://' + output_db_data[0] + ':' + output_db_data[1] +
-                                     output_db_data[2] + '/' + output_db_data[3]))
+    connect(tokens.db_database_name, host=('mongodb://' + tokens.db_username + ':' + tokens.db_password +
+                                     tokens.db_address + '/' + tokens.db_database_name))
+
+    #connectTimeoutMS=30000, socketTimeoutMS=None, socketKeepAlive=True, connect=False, maxPoolsize=1
+    print('[LOG-DB] Established connection to the database.')
 
 
 class Conversation(EmbeddedDocument):
