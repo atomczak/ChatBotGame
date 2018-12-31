@@ -8,13 +8,15 @@ In this code are functions for basic bot behaviours.
 
 import re
 import random
-from pymessenger.bot import Bot
+
 import json
 from difflib import get_close_matches
 #import tokens
 from code import tokens
 from code import mongodb_connection as mng
 from code.resources import *
+from code.pymessenger.bot import Bot
+#from pymessenger.bot import Bot
 from flask import Flask, request
 from datetime import date
 from time import sleep
@@ -70,12 +72,17 @@ def add_new_user(user_id):
 
 # react when the user sends some text
 def handle_text(msg, uid):
-    entity = best_match_entity(msg)
-    print("[LOG-MESG] User #{0} said: '{1}' and I recognize it as: {2}.".format(str(uid)[0:4], str(msg.get('text')), entity))
-    response = bot_response(msg.get('text'), entity)
-    send_message(uid, response)
-    mng.add_conversation(uid,True,msg.get('text'))     # True=human, False=bot
-    mng.add_conversation(uid,False,response)           # True=human, False=bot
+    text = msg.get('text')
+    if text == "start":
+        send_quick_replies(uid)
+        print("[LOG-MESG] User #{0} said secret word: '{1}' and I tried to answer with quick replies.".format(str(uid)[0:4], str(msg.get('text'))))
+    else:
+        entity = best_match_entity(msg)
+        print("[LOG-MESG] User #{0} said: '{1}' and I recognize it as: {2}.".format(str(uid)[0:4], str(msg.get('text')), entity))
+        response = bot_response(text, entity)
+        send_message(uid, response)
+        mng.add_conversation(uid,True,text)     # True=human, False=bot
+        mng.add_conversation(uid,False,response)           # True=human, False=bot
 
 #react when the user sends a sticker
 def handle_sticker(msg, uid):
@@ -104,6 +111,17 @@ def send_image(recipient_id, image_url):
     #local file:
     #bot.send_image(recipient_id, r'C:\Users\Artur\Desktop\CODE\Chatbot Game\resources\CogitoErgoSum.jpg')
     print("[LOG-RESP] Bot has answered with a funny picture.")
+
+def send_quick_replies(recipient_id):
+    reply_message = "So, rock, paper or scissors?"
+    #reply_options = (["one","@one"],["two","@two"])
+    #reply_options=[{"content_type":"text","title":"Search","payload"<POSTBACK_PAYLOAD>","image_url":"http://example.com/img/red.png"},{"content_type":"location"}]
+    reply_options = [{"content_type":"text","title":"✊ rock","payload":"<POSTBACK_PAYLOAD>"},
+        {"content_type":"text","title":"✋ paper","payload":"<POSTBACK_PAYLOAD>"},
+        {"content_type":"text","title":"✌ scissors","payload":"<POSTBACK_PAYLOAD>"}]
+    #bot.send_quickreply(recipient_id,reply_message,reply_options)
+    bot.send_quick_replies_message(recipient_id, reply_message, reply_options)
+    print("[LOG-RESP] Bot has answered with options.")
 
 def mark_seen(recipient_id):
     bot.send_action(recipient_id, 'mark_seen')

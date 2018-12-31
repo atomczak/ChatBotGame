@@ -218,6 +218,92 @@ class Bot:
         """
         return self.send_attachment_url(recipient_id, "image", image_url, notification_type)
 
+    def send_quick_replies_message(self, recipient_id, text, quick_replies, notification_type=NotificationType.regular):
+        """Send quick replies to the specified recipient.
+        https://developers.facebook.com/docs/messenger-platform/send-api-reference/quick-replies
+        Input:
+            recipient_id: recipient id to send to
+            text: text of message to send
+            quick_replies: quick_replies to send
+        Output:
+            Response from API as <dict>
+        """
+        return self.send_message(recipient_id, {
+            "text": text,
+            "quick_replies": quick_replies
+        }, notification_type)
+
+    # def quickReply_Send(self,user_id,text,reply_payload):
+    #     # quick reply for messenger
+    #     # this method sends the request to fb
+    #     params = {
+    #         "access_token":self.access_token,
+    #     }
+    #     payload = {
+    #       "recipient":{"id":user_id,},
+    #       "message":{
+    #         "text":"{}".format(text),
+    #         "quick_replies":reply_payload,
+    #       }
+    #     }
+    #     requests.post(
+    #         "https://graph.facebook.com/v2.6/me/messages",
+    #         params=params,
+    #         data=payload,
+    #         headers={
+    #             'Content-type': 'application/json'
+    #         }
+    #     )
+    #
+    # # quick replies
+    # def quickReply_CreatePayload(self,qk_payload):
+    #     # this function constructs and returns a payload for the the quick reply button payload
+    #     # pass in a tuple-of-list / list-of-lists
+    #     # example : (['title1','payload'],['title2','payload'])
+    #     quick_btns = []
+    #     # constructs the payload
+    #     for i in range(len(qk_payload)):
+    #         quick_btns.append(
+    #             {
+    #                 "content_type":"text",
+    #                 "title":qk_payload[i][0],
+    #                 "payload":qk_payload[i][1],
+    #             }
+    #         )
+    #     return quick_btns
+    #
+    # def send_quickreply(self,recipient_id,quick_reply_message,reply_options):
+    #     # use this method to send quick replies
+    #     # this method puts everything together
+    #     # automatically constructs the payload for the buttons from the list
+    #     reply_payload = quickReply_CreatePayload(reply_options)
+    #     quickReply_Send(token = token,
+    #         user_id = recipient_id,
+    #         text = "{}".format(quick_reply_message),
+    #         reply_payload = reply_payload,
+    #     )
+
+    def get_user_info(self, recipient_id, fields=None):
+        """Getting information about the user
+        https://developers.facebook.com/docs/messenger-platform/user-profile
+        Input:
+        recipient_id: recipient id to send to
+        Output:
+        Response from API as <dict>
+        """
+        params = {}
+        if fields is not None and isinstance(fields, (list, tuple)):
+            params['fields'] = ",".join(fields)
+
+            params.update(self.auth_args)
+
+            request_endpoint = '{0}/{1}'.format(self.graph_url, recipient_id)
+            response = requests.get(request_endpoint, params=params)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return None
+
     def send_audio(self, recipient_id, audio_path, notification_type=NotificationType.regular):
         """Send audio to the specified recipient.
         Audio must be MP3 or WAV
@@ -296,27 +382,6 @@ class Bot:
             }
         }, notification_type)
 
-    
-    def get_user_info(self, recipient_id, fields=None):
-        """Getting information about the user
-        https://developers.facebook.com/docs/messenger-platform/user-profile
-        Input:
-          recipient_id: recipient id to send to
-        Output:
-          Response from API as <dict>
-        """
-        params = {}
-        if fields is not None and isinstance(fields, (list, tuple)):
-            params['fields'] = ",".join(fields)
-
-        params.update(self.auth_args)
-
-        request_endpoint = '{0}/{1}'.format(self.graph_url, recipient_id)
-        response = requests.get(request_endpoint, params=params)
-        if response.status_code == 200:
-            return response.json()
-
-        return None
 
     def send_raw(self, payload):
         request_endpoint = '{0}/me/messages'.format(self.graph_url)
@@ -326,7 +391,6 @@ class Bot:
             json=payload
         )
         result = response.json()
-        from pprint import pprint
         return result
 
     def _send_payload(self, payload):
