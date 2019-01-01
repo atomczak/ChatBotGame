@@ -12,6 +12,7 @@ import random
 import json
 from difflib import get_close_matches
 #import tokens
+from code import rock_paper_scissors as rps
 from code import tokens
 from code import mongodb_connection as mng
 from code.resources import *
@@ -74,15 +75,29 @@ def add_new_user(user_id):
 # react when the user sends some text
 def handle_text(msg, uid):
     text = msg.get('text')
+    mng.add_conversation(uid, 'User', text)
     if text == "start":
         send_quick_replies(uid)
         print("[LOG-MESG] User #{0} said secret word: '{1}' and I tried to answer with quick replies.".format(str(uid)[0:4], str(msg.get('text'))))
+    elif text == "✊ rock" or text == "✋ paper" or text == "✌ scissors":
+        print("[LOG-MESG] User #{0} said secret word: '{1}' and I tried to start a game.".format(str(uid)[0:4], str(msg.get('text'))))
+        game_outcome = rps.play_a_round(uid,text)
+        if game_outcome[0] is None:
+            response = """Uff! It's a draw!"""
+        elif game_outcome[0] == 0:
+            response = "Hah! I won!"
+        elif game_outcome[0] == 1:
+            response = "Damm! I lost!"
+        send_message(uid, game_outcome[1])
+        mng.add_conversation(uid, 'Bot', game_outcome[1])
+        send_message(uid, str(response))
+        mng.add_conversation(uid, 'Bot', str(response))
+        send_quick_replies(uid)
     else:
         entity = best_match_entity(msg)
         print("[LOG-MESG] User #{0} said: '{1}' and I recognize it as: {2}.".format(str(uid)[0:4], str(msg.get('text')), entity))
         response = bot_response(text, entity)
         send_message(uid, response)
-        mng.add_conversation(uid,'User',text)
         mng.add_conversation(uid,'Bot',response)
 
 #react when the user sends a sticker
@@ -90,8 +105,8 @@ def handle_sticker(msg, uid):
     print("[LOG-MESG] User #{0} sent a sticker.".format(str(uid)[0:4]))
     response = recognize_sticker(str(msg.get('sticker_id')))
     send_message(uid, response)
-    mng.add_conversation(uid,True,'Some sticker')     # True=human, False=bot
-    mng.add_conversation(uid,False,response)           # True=human, False=bot
+    mng.add_conversation(uid,'User','Some sticker')     # True=human, False=bot
+    mng.add_conversation(uid,'Bot',response)           # True=human, False=bot
 
 #react when the user sends a GIFs, photos, videos, or any other non-text item:
 def handle_attachment(msg, uid):
@@ -99,8 +114,8 @@ def handle_attachment(msg, uid):
     #Send funny gif:
     image_url = r'https://media.giphy.com/media/L7ONYIPYXyc8/giphy.gif'
     send_image(uid, image_url)
-    mng.add_conversation(uid,True,'Some attachment (GIF)')     # True=human, False=bot
-    mng.add_conversation(uid,False,'GIF with a guy.')           # True=human, False=bot
+    mng.add_conversation(uid,'User','Some attachment (GIF)')     # True=human, False=bot
+    mng.add_conversation(uid,'Bot','GIF with a guy.')           # True=human, False=bot
 
 def send_message(recipient_id, response):
     if type(response) == list: response = random.choice(response)
@@ -115,6 +130,7 @@ def send_image(recipient_id, image_url):
 
 def send_quick_replies(recipient_id):
     reply_message = "So, rock, paper or scissors?"
+    mng.add_conversation(recipient_id, 'Bot', reply_message)
     #reply_options = (["one","@one"],["two","@two"])
     #reply_options=[{"content_type":"text","title":"Search","payload"<POSTBACK_PAYLOAD>","image_url":"http://example.com/img/red.png"},{"content_type":"location"}]
     reply_options = [{"content_type":"text","title":"✊ rock","payload":"<POSTBACK_PAYLOAD>"},
