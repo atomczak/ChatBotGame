@@ -183,4 +183,4 @@ def translate(word):
         return encyclopedia[word]
     elif len(get_close_matches(word, encyclopedia.keys())) > 0:
         return ["CloseMatch", encyclopedia[get_close_matches(word, encyclopedia.keys())[0]], encyclopedia[get_close_matches(w, encyclopedia.keys())[1]]]
-#branch test
+
