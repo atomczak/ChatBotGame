@@ -66,6 +66,7 @@ def add_new_user(user_id):
     if user_id not in users:    # add new user
         #get_user_info(bot,uid)  #first_name TODO
         mng.create_player(user_id)
+        users.append(user_id)
     else:                       # user already in the DB - collect info
         mng.find_player(user_id).first_name
         #TODO
@@ -81,8 +82,8 @@ def handle_text(msg, uid):
         print("[LOG-MESG] User #{0} said: '{1}' and I recognize it as: {2}.".format(str(uid)[0:4], str(msg.get('text')), entity))
         response = bot_response(text, entity)
         send_message(uid, response)
-        mng.add_conversation(uid,True,text)     # True=human, False=bot
-        mng.add_conversation(uid,False,response)           # True=human, False=bot
+        mng.add_conversation(uid,'User',text)
+        mng.add_conversation(uid,'Bot',response)
 
 #react when the user sends a sticker
 def handle_sticker(msg, uid):

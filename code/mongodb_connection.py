@@ -17,8 +17,8 @@ class Conversation(EmbeddedDocument):
     """Template for what a conversation looks like in the database.
     Its going to be a list of lists of spoken lines, containing also some additional data
     The conversations list is always embedded in the Player document"""
-    who_said_it = BooleanField(required=True)  # 0 bot, 1 human
-    message_content = StringField(required=True)  # what message has been sent
+    bot_said = StringField()  # what message has been sent by the bot
+    user_said = StringField()  # what message has been sent by the user
     message_timestamp = DateTimeField(required=False)  # when a specific date was recorded
     message_intent = StringField()  # feelings and what not
 
@@ -74,13 +74,21 @@ def update_player_results(facebook_id, times_won=None):
 
 
 def add_conversation(facebook_id, who_said_it, message_content, message_timestamp=None, message_intent=None):
-    """A function used to add a conversation to the specific player """
-    conversation = Conversation(
-        who_said_it=who_said_it,
-        message_content=message_content,
-        message_timestamp=message_timestamp,
-        message_intent=message_intent
-    )
+    """A function used to add a conversation to the specific player. """
+    if who_said_it == 'Bot':
+        conversation = Conversation(
+            bot_said=message_content,
+            message_timestamp=message_timestamp,
+            message_intent=message_intent
+        )
+    elif who_said_it == 'User':
+        conversation = Conversation(
+            user_said=message_content,
+            message_timestamp=message_timestamp,
+            message_intent=message_intent
+        )
+    else:
+        raise Exception("""Function input data does not fit the assumptions. Please specify who_said_it field properly. Options are: 'Bot' or 'User'""")
     query = Player.objects(facebook_id=facebook_id)  # finds the specific record via facebook_id
     query.update_one(push__conversations=conversation)
     # adds the conversation to the player record (to the end of conversations list)
