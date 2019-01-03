@@ -1,4 +1,5 @@
 import random
+from code import rock_paper_scissors as rps
 
 #Set of intents and patterns to recognize them:
 pattern_dictionary = {
@@ -14,19 +15,24 @@ pattern_dictionary = {
         'uname?' : [r'y?o?ur\sname\??', r'(how|what)[\s\S]{1,15}call(ing)?\sy?o?u\??'],
         'ureal?' : r'\by?o?u\s(real|true|bot|ai|human|person|man)\b',
         "secret" : r'(secret|password|key)',
+        "rock-paper-scissors" : [r'start', r'play', r'game', r'rock ?paper ?scissors', r'rock', r'✊', r'paper', r'✋', r'scissors', r'✌'],
         "love" : r'love',
         #"love" : [r'love',r'(\❤️|\🧡|\💛|\💚|\💙|\💜|\🖤)'],
+        'test_list_message': r'list message',
+        'test_button_message': r'button message',
+        'test_generic_message': r'generic message',
         'bye': r'(bye|exit|quit|end)'
     }
 
 #Set of responses for particular intents:
-def responder(intent, userAns=""):
+def responder(intent, user_message="", userid="", bot=""):
     return {
-        "greetings": "{0}! How are you doing?".format(userAns.split(' ', 1)[0].capitalize()),
+        "greetings": "{0}! How are you doing?".format(user_message.split(' ', 1)[0].capitalize()),
         "yes": ["You confirm, good","great","perfect","good","(y)"],
         "no": [":(","nooo","why not?","Nobody says no to me!"],
-        "maybe" : "'{0}'? You should be sure by now.".format(userAns.capitalize()),
-        "curse" : ["you {0}".format(userAns),"not nice","Calm down!","same for you","yeah? you too"],
+        "maybe" : "'{0}'? You should be sure by now.".format(user_message.capitalize()),
+        "curse" : ["you {0}".format(user_message),"not nice","Calm down!","same for you","yeah? you too"],
+        "rock-paper-scissors" : "",
         "uname?" : ["My name is Khan 😎","chicka-chicka Slim Shady 😎","👽","🤖","they call me the man with no name"],
         "ureal?" : ["Cogito Ergo Sum","What is real?"],
         "secret" : ["😈","😎","💩","🤠","💀","👽","🤖","🙈🙉🙊"],

@@ -1,13 +1,21 @@
+"""
+This code contains functions for sending FB messages and other actions.
+It mostly contains modified version of Davidchua's pymessenger(https://github.com/davidchua/pymessenger).
+"""
+
 import os
 from enum import Enum
-
 import requests
 from requests_toolbelt import MultipartEncoder
+from time import sleep
+import random
+from code import mongodb_connection as db
+# For token veryfication:
+import hashlib
+import hmac
+import six
 
-from pymessenger import utils
-
-#DEFAULT_API_VERSION = 2.6
-DEFAULT_API_VERSION = 3.2
+DEFAULT_API_VERSION = 3.2   #2.6
 
 class NotificationType(Enum):
     regular = "REGULAR"
@@ -36,28 +44,28 @@ class Bot:
                 'access_token': self.access_token
             }
             if self.app_secret is not None:
-                appsecret_proof = utils.generate_appsecret_proof(self.access_token, self.app_secret)
+                appsecret_proof = generate_appsecret_proof(self.access_token, self.app_secret)
                 auth['appsecret_proof'] = appsecret_proof
             self._auth_args = auth
         return self._auth_args
 
-    def send_recipient(self, recipient_id, payload, notification_type=NotificationType.regular):
+    def fb_send_recipient(self, userid, payload, notification_type=NotificationType.regular):
         payload['recipient'] = {
-            'id': recipient_id
+            'id': userid
         }
         payload['notification_type'] = notification_type.value
-        return self.send_raw(payload)
+        return self.fb_send_raw(payload)
 
-    def send_message(self, recipient_id, message, notification_type=NotificationType.regular):
-        return self.send_recipient(recipient_id, {
+    def fb_send_message(self, userid, message, notification_type=NotificationType.regular):
+        return self.fb_send_recipient(userid, {
             'message': message
         }, notification_type)
 
-    def send_attachment(self, recipient_id, attachment_type, attachment_path,
+    def fb_send_attachment(self, userid, attachment_type, attachment_path,
                         notification_type=NotificationType.regular):
         """Send an attachment to the specified recipient using local path.
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             attachment_type: type of attachment (image, video, audio, file)
             attachment_path: Path of attachment
         Output:
@@ -66,7 +74,7 @@ class Bot:
         payload = {
             'recipient': {
                 {
-                    'id': recipient_id
+                    'id': userid
                 }
             },
             'notification_type': notification_type,
@@ -87,17 +95,17 @@ class Bot:
         return requests.post(self.graph_url, data=multipart_data,
                              params=self.auth_args, headers=multipart_header).json()
 
-    def send_attachment_url(self, recipient_id, attachment_type, attachment_url,
+    def fb_send_attachment_url(self, userid, attachment_type, attachment_url,
                             notification_type=NotificationType.regular):
         """Send an attachment to the specified recipient using URL.
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             attachment_type: type of attachment (image, video, audio, file)
             attachment_url: URL of attachment
         Output:
             Response from API as <dict>
         """
-        return self.send_message(recipient_id, {
+        return self.fb_send_message(userid, {
             'attachment': {
                 'type': attachment_type,
                 'payload': {
@@ -106,29 +114,32 @@ class Bot:
             }
         }, notification_type)
 
-    def send_text_message(self, recipient_id, message, notification_type=NotificationType.regular):
+    def fb_send_text_message(self, userid, message, notification_type=NotificationType.regular):
         """Send text messages to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/text-message
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             message: message to send
         Output:
             Response from API as <dict>
         """
-        return self.send_message(recipient_id, {
+        if type(message) == list: message = random.choice(message)
+        return self.fb_send_message(userid, {
             'text': message
         }, notification_type)
 
-    def send_generic_message(self, recipient_id, elements, notification_type=NotificationType.regular):
+    def fb_send_generic_message(self, userid, element_titles=['a', 'b'], notification_type=NotificationType.regular):
         """Send generic messages to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/generic-template
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             elements: generic message elements to send
         Output:
             Response from API as <dict>
         """
-        return self.send_message(recipient_id, {
+        elements = self.fb_define_elements(element_titles)
+
+        return self.fb_send_message(userid, {
             "attachment": {
                 "type": "template",
                 "payload": {
@@ -138,38 +149,43 @@ class Bot:
             }
         }, notification_type)
 
-    def send_list_message(self, recipient_id, elements,button, notification_type=NotificationType.regular):
+    def fb_send_list_message(self, userid, element_titles=['a', 'b'], button_names=['a', 'b'], notification_type=NotificationType.regular):
         """Send generic messages to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/generic-template
         Input:
-            recipient_id: recipient id to send to
-            elements: generic message elements to send
+            userid: recipient id to send to
+            element_titles: generic message elements to send
         Output:
             Response from API as <dict>
         """
-        return self.send_message(recipient_id, {
+        elements = self.fb_define_elements(element_titles)
+        buttons = self.fb_define_buttons(button_names)
+
+        return self.fb_send_message(userid, {
             "attachment": {
                 "type": "template",
                 "payload": {
                 "template_type": "list",
                 "top_element_style": "large",
                     "elements": elements,
-                    "buttons":button
+                    "buttons": buttons
                 }
             }
         }, notification_type)
 
-    def send_button_message(self, recipient_id, text, buttons, notification_type=NotificationType.regular):
+    def fb_send_button_message(self, userid, text="abc", button_names=['a', 'b'], notification_type=NotificationType.regular):
         """Send text messages to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/button-template
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             text: text of message to send
             buttons: buttons to send
         Output:
             Response from API as <dict>
         """
-        return self.send_message(recipient_id, {
+        buttons = self.fb_define_buttons(button_names)
+
+        return self.fb_send_message(userid, {
             "attachment": {
                 "type": "template",
                 "payload": {
@@ -180,114 +196,117 @@ class Bot:
             }
         }, notification_type)
 
-    def send_action(self, recipient_id, action, notification_type=NotificationType.regular):
+    def fb_define_buttons(self, button_names=['a', 'b']):
+        buttons = []
+        for b in button_names:
+            buttons.append({
+            "title": str(b),
+            "type": "web_url",
+            "url": "https://google.com",
+            "messenger_extensions": "true",
+            "webview_height_ratio": "tall",
+            "fallback_url": "https://google.com"
+            })
+        return buttons
+
+    def fb_define_elements(self, element_titles=['a', 'b'], buttons=[]):
+        elements = []
+        for e in element_titles:
+            elements.append({
+            "title": str(e),
+            "subtitle": "This is a subtitle",
+            "image_url": "https://www.snk-corp.co.jp/us/neogeomini/img/main/top_neomini.png",
+            "buttons": buttons,
+            })
+        return elements
+
+    def fb_send_action(self, userid, action, notification_type=NotificationType.regular):
         """Send typing indicators or send read receipts to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/sender-actions
 
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             action: action type (mark_seen, typing_on, typing_off)
         Output:
             Response from API as <dict>
         """
-        return self.send_recipient(recipient_id, {
+        return self.fb_send_recipient(userid, {
             'sender_action': action
         }, notification_type)
 
-    def send_image(self, recipient_id, image_path, notification_type=NotificationType.regular):
+    def fb_send_image(self, userid, image_path, notification_type=NotificationType.regular):
         """Send an image to the specified recipient.
         Image must be PNG or JPEG or GIF (more might be supported).
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/image-attachment
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             image_path: path to image to be sent
         Output:
             Response from API as <dict>
         """
-        return self.send_attachment(recipient_id, "image", image_path, notification_type)
+        return self.fb_send_attachment(userid, "image", image_path, notification_type)
 
-    def send_image_url(self, recipient_id, image_url, notification_type=NotificationType.regular):
+    def fb_send_image_url(self, userid, image_url, notification_type=NotificationType.regular):
         """Send an image to specified recipient using URL.
         Image must be PNG or JPEG or GIF (more might be supported).
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/image-attachment
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             image_url: url of image to be sent
         Output:
             Response from API as <dict>
         """
-        return self.send_attachment_url(recipient_id, "image", image_url, notification_type)
+        return self.fb_send_attachment_url(userid, "image", image_url, notification_type)
 
-    def send_quick_replies_message(self, recipient_id, text, quick_replies, notification_type=NotificationType.regular):
+    def fb_send_quick_replies(self, userid, reply_message = "", replies = ['a','b','c'], notification_type=NotificationType.regular):
         """Send quick replies to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/quick-replies
         Input:
-            recipient_id: recipient id to send to
-            text: text of message to send
-            quick_replies: quick_replies to send
+            userid: recipient id to send to
+            reply_message: text of message to send
+            replies: quick_replies to send e.g.['a','b','c']
         Output:
             Response from API as <dict>
         """
-        return self.send_message(recipient_id, {
-            "text": text,
-            "quick_replies": quick_replies
+        #TODO add icon near quick replies: {...,"image_url":"http://example.com/img/red.png"}
+        reply_options = []
+        for option in replies:
+            content = {
+                "content_type" : "text",
+                "title" : str(option),
+                "payload" : "<POSTBACK_PAYLOAD>"
+            }
+            reply_options.append(content)
+
+        return self.fb_send_message(userid, {
+            "text": reply_message,
+            "quick_replies": reply_options
         }, notification_type)
 
-    # def quickReply_Send(self,user_id,text,reply_payload):
-    #     # quick reply for messenger
-    #     # this method sends the request to fb
-    #     params = {
-    #         "access_token":self.access_token,
-    #     }
-    #     payload = {
-    #       "recipient":{"id":user_id,},
-    #       "message":{
-    #         "text":"{}".format(text),
-    #         "quick_replies":reply_payload,
-    #       }
-    #     }
-    #     requests.post(
-    #         "https://graph.facebook.com/v2.6/me/messages",
-    #         params=params,
-    #         data=payload,
-    #         headers={
-    #             'Content-type': 'application/json'
-    #         }
-    #     )
-    #
-    # # quick replies
-    # def quickReply_CreatePayload(self,qk_payload):
-    #     # this function constructs and returns a payload for the the quick reply button payload
-    #     # pass in a tuple-of-list / list-of-lists
-    #     # example : (['title1','payload'],['title2','payload'])
-    #     quick_btns = []
-    #     # constructs the payload
-    #     for i in range(len(qk_payload)):
-    #         quick_btns.append(
-    #             {
-    #                 "content_type":"text",
-    #                 "title":qk_payload[i][0],
-    #                 "payload":qk_payload[i][1],
-    #             }
-    #         )
-    #     return quick_btns
-    #
-    # def send_quickreply(self,recipient_id,quick_reply_message,reply_options):
-    #     # use this method to send quick replies
-    #     # this method puts everything together
-    #     # automatically constructs the payload for the buttons from the list
-    #     reply_payload = quickReply_CreatePayload(reply_options)
-    #     quickReply_Send(token = token,
-    #         user_id = recipient_id,
-    #         text = "{}".format(quick_reply_message),
-    #         reply_payload = reply_payload,
-    #     )
+    def fb_send_quick_location(self, userid, reply_message = ""):
+        """Send quick replies with location button to the specified recipient.
+        Input:
+            userid: recipient id to send to
+        Output:
+            Response from API as <dict>
+        """
+        return self.fb_send_message(userid, {
+            "text": reply_message,
+            "quick_replies": [{"content_type":"location"}]
+        }, notification_type)
 
-    def get_user_info(self, recipient_id, fields=None):
+    def fb_fake_typing(self, userid, duration=0.6):
+        """ Pretend the bot is typing for n seconds. """
+        #TODO shouldn't it be waiting a but before typing? sleep(duration/2)
+        self.fb_send_action(userid, 'typing_on')
+        sleep(duration)
+        self.fb_send_action(userid, 'typing_off')
+
+    def fb_get_user_info(self, userid, fields=None):
         """Getting information about the user
         https://developers.facebook.com/docs/messenger-platform/user-profile
         Input:
-        recipient_id: recipient id to send to
+        userid: recipient id to send to
         Output:
         Response from API as <dict>
         """
@@ -297,93 +316,92 @@ class Bot:
 
             params.update(self.auth_args)
 
-            request_endpoint = '{0}/{1}'.format(self.graph_url, recipient_id)
+            request_endpoint = '{0}/{1}'.format(self.graph_url, userid)
             response = requests.get(request_endpoint, params=params)
             if response.status_code == 200:
                 return response.json()
             else:
                 return None
 
-    def send_audio(self, recipient_id, audio_path, notification_type=NotificationType.regular):
+    def fb_send_audio(self, userid, audio_path, notification_type=NotificationType.regular):
         """Send audio to the specified recipient.
         Audio must be MP3 or WAV
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/audio-attachment
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             audio_path: path to audio to be sent
         Output:
             Response from API as <dict>
         """
-        return self.send_attachment(recipient_id, "image", audio_path, notification_type)
+        return self.fb_send_attachment(userid, "image", audio_path, notification_type)
 
-    def send_audio_url(self, recipient_id, audio_url, notification_type=NotificationType.regular):
+    def fb_send_audio_url(self, userid, audio_url, notification_type=NotificationType.regular):
         """Send audio to specified recipient using URL.
         Audio must be MP3 or WAV
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/audio-attachment
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             audio_url: url of audio to be sent
         Output:
             Response from API as <dict>
         """
-        return self.send_attachment_url(recipient_id, "audio", audio_url, notification_type)
+        return self.fb_send_attachment_url(userid, "audio", audio_url, notification_type)
 
-    def send_video(self, recipient_id, video_path, notification_type=NotificationType.regular):
+    def fb_send_video(self, userid, video_path, notification_type=NotificationType.regular):
         """Send video to the specified recipient.
         Video should be MP4 or MOV, but supports more (https://www.facebook.com/help/218673814818907).
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/video-attachment
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             video_path: path to video to be sent
         Output:
             Response from API as <dict>
         """
-        return self.send_attachment(recipient_id, "video", video_path, notification_type)
+        return self.fb_send_attachment(userid, "video", video_path, notification_type)
 
-    def send_video_url(self, recipient_id, video_url, notification_type=NotificationType.regular):
+    def fb_send_video_url(self, userid, video_url, notification_type=NotificationType.regular):
         """Send video to specified recipient using URL.
         Video should be MP4 or MOV, but supports more (https://www.facebook.com/help/218673814818907).
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/video-attachment
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             video_url: url of video to be sent
         Output:
             Response from API as <dict>
         """
-        return self.send_attachment_url(recipient_id, "video", video_url, notification_type)
+        return self.fb_send_attachment_url(userid, "video", video_url, notification_type)
 
-    def send_file(self, recipient_id, file_path, notification_type=NotificationType.regular):
+    def fb_send_file(self, userid, file_path, notification_type=NotificationType.regular):
         """Send file to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/file-attachment
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             file_path: path to file to be sent
         Output:
             Response from API as <dict>
         """
-        return self.send_attachment(recipient_id, "file", file_path, notification_type)
+        return self.fb_send_attachment(userid, "file", file_path, notification_type)
 
-    def send_file_url(self, recipient_id, file_url, notification_type=NotificationType.regular):
+    def fb_send_file_url(self, userid, file_url, notification_type=NotificationType.regular):
         """Send file to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/file-attachment
         Input:
-            recipient_id: recipient id to send to
+            userid: recipient id to send to
             file_url: url of file to be sent
         Output:
             Response from API as <dict>
         """
-        return self.send_attachment_url(recipient_id, "file", file_url, notification_type)
+        return self.fb_send_attachment_url(userid, "file", file_url, notification_type)
 
-    def send_airline_itinerary(self, recipient_id, payload, notification_type=NotificationType.regular):
-        return self.send_message(recipient_id, {
+    def fb_send_airline_itinerary(self, userid, payload, notification_type=NotificationType.regular):
+        return self.fb_send_message(userid, {
             "attachment": {
                 "type": "template",
                 "payload": payload
             }
         }, notification_type)
 
-
-    def send_raw(self, payload):
+    def fb_send_raw(self, payload):
         request_endpoint = '{0}/me/messages'.format(self.graph_url)
         response = requests.post(
             request_endpoint,
@@ -393,6 +411,43 @@ class Bot:
         result = response.json()
         return result
 
-    def _send_payload(self, payload):
-        """ Deprecated, use send_raw instead """
-        return self.send_raw(payload)
+def validate_hub_signature(app_secret, request_payload, hub_signature_header):
+    """
+        @inputs:
+            app_secret: Secret Key for application
+            request_payload: request body
+            hub_signature_header: X-Hub-Signature header sent with request
+        @outputs:
+            boolean indicated that hub signature is validated
+    """
+    try:
+        hash_method, hub_signature = hub_signature_header.split('=')
+    except:
+        pass
+    else:
+        digest_module = getattr(hashlib, hash_method)
+        if six.PY2:
+            hmac_object = hmac.new(
+                str(app_secret), unicode(request_payload), digest_module)
+        else:
+            hmac_object = hmac.new(bytearray(app_secret, 'UTF-8'), str(request_payload).encode('UTF-8'), digest_module)
+        generated_hash = hmac_object.hexdigest()
+        if hub_signature == generated_hash:
+            return True
+    return False
+
+def generate_appsecret_proof(access_token, app_secret):
+    """
+        @inputs:
+            access_token: page access token
+            app_secret_token: app secret key
+        @outputs:
+            appsecret_proof: HMAC-SHA256 hash of page access token
+                using app_secret as the key
+    """
+    if six.PY2:
+        hmac_object = hmac.new(str(app_secret), unicode(access_token), hashlib.sha256)
+    else:
+        hmac_object = hmac.new(bytearray(app_secret, 'UTF-8'), str(access_token).encode('UTF-8'), hashlib.sha256)
+    generated_hash = hmac_object.hexdigest()
+    return generated_hash
