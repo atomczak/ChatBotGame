@@ -1,30 +1,32 @@
 import random
-from code import mongodb_connection
+from code import mongodb_connection as db
+from code.fb_messenger import *
+from code import bot_behaviour
+from time import sleep
 
-def play_a_round(facebook_id, user_choice):
+def play_a_round(userid, user_choice):
     """Function that plays a round of rock - paper - scissors.
     Accepted arguments: 'rock', 'paper', 'scissors'
     winner bot -> 0; winner player -> 1; draw =-> None"""
-    choices = ['✊ rock', '✋ paper', '✌ scissors']
+    choices = ['rock', 'paper', 'scissors']
     bot_choice = random.choice(choices)
     print("[LOG-GAME] User chose: " + user_choice + " Bot chose: " + bot_choice)
     game_outcome = -1
-
     # establish game outcome
     if user_choice == bot_choice:
         game_outcome = None
-    elif user_choice == '✊ rock':
-        if bot_choice == '✋ paper':
+    elif user_choice == 'rock':
+        if bot_choice == 'paper':
             game_outcome = 0
         else:
             game_outcome = 1
-    elif user_choice == '✋ paper':
-        if bot_choice == '✌ scissors':
+    elif user_choice == 'paper':
+        if bot_choice == 'scissors':
             game_outcome = 0
         else:
             game_outcome = 1
-    elif user_choice == '✌ scissors':
-        if bot_choice == '✊ rock':
+    elif user_choice == 'scissors':
+        if bot_choice == 'rock':
             game_outcome = 0
         else:
             game_outcome = 1
@@ -34,6 +36,37 @@ def play_a_round(facebook_id, user_choice):
 
     # establish return statements and update the database
     # winner bot -> 0; winner player -> 1; draw =-> None"
-    mongodb_connection.update_player_results(facebook_id, game_outcome)
-    return [game_outcome,bot_choice]
+    db.update_player_results(userid, game_outcome)
+    return [game_outcome, bot_choice]
 
+def play(user_message = "", userid="", bot=""):
+    rps_pattern = {
+        "new_game" : [r'start', r'play', r'game', r'rock ?paper ?scissors'],
+        "rock" :  [r'rock', r'✊'],
+        "paper" :  [r'paper', r'✋'],
+        "scissors" :  [r'scissors', r'✌']
+    }
+    choice = bot_behaviour.regex_pattern_matcher(user_message, rps_pattern)
+    print("[LOG-TEMP] choice is: "+str(choice))
+    if choice == "new_game":
+        entry_message = random.choice(["Which one do you choose?", "so, rock, paper or scissors?", "ok, let's play!"])
+        bot.fb_send_quick_replies(userid, entry_message, ["✊ rock","✋ paper","✌ scissors"])
+        print("[LOG-MESG] User #{0} started a new RPS game with: '{1}'.".format(str(userid)[0:4], str(user_message)))
+        return "Game started"
+    elif choice == "rock" or choice == "paper" or choice == "scissors":
+        game_outcome = play_a_round(userid, choice)
+        if game_outcome[0] is None:
+            response = ["Uff! It's a draw!", "Tie!"]
+        elif game_outcome[0] == 0:
+            response = ["Hah! I won!", "I'm just lucky :)"]
+        elif game_outcome[0] == 1:
+            response = ["Damm! I lost!", "You win!"]
+        sleep(0.2)
+        bot.fb_send_text_message(userid, game_outcome[1])
+        db.add_conversation(userid, 'Bot', game_outcome[1])
+        sleep(0.2)
+        bot.fb_send_text_message(userid, str(response))
+        db.add_conversation(userid, 'Bot', str(response))
+        return "Game played"
+    else:
+        return "Error?"

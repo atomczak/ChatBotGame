@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import Flask, request
-from code.helpers import *
+from code.bot_behaviour import *
 import json
 import pprint
 
