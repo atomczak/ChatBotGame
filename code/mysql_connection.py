@@ -1,5 +1,6 @@
 import mysql.connector
 from mysql.connector import errorcode
+from code import tokens
 
 """Funtion definition"""
 
@@ -173,21 +174,9 @@ db_tables['conversation'] = (
     "     REFERENCES `players` (`facebook_id`) ON DELETE CASCADE"
     ") ENGINE=InnoDB")
 
-local_config = {
-    'user': 'root',
-    'password': """frytkiMySQL""",
-    'host': 'localhost',
-    'database': 'RockPaperScissor$Players',
-    'raise_on_warnings': True
-}
+local_config =  tokens.local_config
 
-pythonanywhere_config = {
-    'user': 'RockPaperScissor',
-    'password': """669T"uU?r;U]GqK*""",
-    'host': 'RockPaperScissors.mysql.pythonanywhere-services.com',
-    'database': 'RockPaperScissor$Players',
-    'raise_on_warnings': True
-}
+pythonanywhere_config = tokens.pythonanywhere_config
 
 """SETUP"""
 
