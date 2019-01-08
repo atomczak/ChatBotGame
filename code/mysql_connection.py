@@ -50,7 +50,6 @@ def create_tables():
         else:
             print("OK")
 
-
 def create_player(facebook_id, first_name=None, last_name=None, gender=None):
     try:
         add_player = ("INSERT INTO players "
@@ -87,6 +86,60 @@ def add_conversation(facebook_id, who_said_it, message_content, message_timestam
         print("[LOG-DB] Error: {}".format(err))
     except:
         raise Exception("""[LOG-DB] Function input data does not fit the assumptions. Please specify who_said_it field properly. Options are: 'Bot' or 'User'""")
+
+def update_player_results(facebook_id, times_won=None):
+    """A function used to update player results."""
+    if times_won == 1:  # winner player -> 1
+        cursor.execute("""
+           UPDATE players
+           SET times_played=times_played+1, times_won=times_won+1
+           WHERE facebook_id=%s
+        """, (facebook_id,))
+    elif times_won == 0: # winner bot -> 0
+        cursor.execute("""
+           UPDATE players
+           SET times_played=times_played+1, times_lost=times_lost+1
+           WHERE facebook_id=%s
+        """, (facebook_id,))
+    elif times_won == -1:  # draw -> -1
+        cursor.execute("""
+               UPDATE players
+               SET times_played=times_played+1, times_drew=times_drew+1
+               WHERE facebook_id=%s
+            """, (facebook_id,))
+    cnx.commit()
+
+def update_player(facebook_id, first_name=None, last_name=None, gender=None):
+    """A function used to update player data."""
+    if first_name is not None:
+        cursor.execute("""
+           UPDATE players
+           SET first_name=%s
+           WHERE facebook_id=%s
+        """, (first_name,facebook_id))
+    elif last_name is not None:
+        cursor.execute("""
+           UPDATE players
+           SET last_name=%s
+           WHERE facebook_id=%s
+        """, (last_name,facebook_id))
+    elif gender is not None:
+        cursor.execute("""
+           UPDATE players
+           SET gender=%s
+           WHERE facebook_id=%s
+        """, (gender,facebook_id))
+    cnx.commit()
+
+def db_query(facebook_id, fields_to_query):
+    str_facebook_id = "'" + facebook_id + "'"
+    str_fields_to_query = ','.join(fields_to_query)
+    query =  """SELECT %s
+             FROM players 
+             WHERE facebook_id = %s""" % (str_fields_to_query, str_facebook_id)
+    cursor.execute(query)
+    result = cursor.fetchone()
+    return result
 
 """DATA"""
 
@@ -141,4 +194,3 @@ pythonanywhere_config = {
 cnx = connect_to_db(local_config)
 create_database()
 create_tables()
-
