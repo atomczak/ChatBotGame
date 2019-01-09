@@ -6,7 +6,8 @@ import re
 import json
 import random
 from code import tokens
-from code import mongodb_connection as db
+#from code import mongodb_connection as db
+from code import mysql_connection as db
 from code.resources import *
 from code.fb_messenger import Bot
 from code import rock_paper_scissors as rps
@@ -17,8 +18,8 @@ bot = Bot(tokens.fb_access)
 
 #fetch user ids from the DB:
 users = []
-for user in db.Player.objects():
-    users.append(user.facebook_id)
+for user in db.get_all('facebook_id'):
+    users.append(user)
 
 def verify_fb_token(token_sent):
     """Take token sent by facebook and verify if it matches"""
@@ -59,7 +60,7 @@ def add_new_user(user_id):
         users.append(user_id)
     else:
         #TODO withdraw more info from the database.
-        db.find_player(user_id).first_name
+        db.query(user_id, (first_name,))
 
 def handle_text(message, userid, bot):
     """ React when the user sends any text. """

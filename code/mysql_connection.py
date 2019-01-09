@@ -132,7 +132,7 @@ def update_player(facebook_id, first_name=None, last_name=None, gender=None):
         """, (gender,facebook_id))
     cnx.commit()
 
-def db_query(facebook_id, fields_to_query):
+def query(facebook_id, fields_to_query):
     str_facebook_id = "'" + facebook_id + "'"
     str_fields_to_query = ','.join(fields_to_query)
     query =  """SELECT %s
@@ -141,6 +141,14 @@ def db_query(facebook_id, fields_to_query):
     cursor.execute(query)
     result = cursor.fetchone()
     return result
+
+def get_all(fields_to_get):
+    query =  """SELECT %s
+             FROM players 
+             """ % (fields_to_get)
+    cursor.execute(query)
+    result = cursor.fetchall()
+    return [item[0] for item in result]
 
 """DATA"""
 
@@ -180,6 +188,6 @@ pythonanywhere_config = tokens.pythonanywhere_config
 
 """SETUP"""
 
-cnx = connect_to_db(local_config)
+cnx = connect_to_db(pythonanywhere_config)
 create_database()
 create_tables()

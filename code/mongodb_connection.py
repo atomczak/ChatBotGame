@@ -29,44 +29,37 @@ class Player(Document):
     facebook_id = StringField(primary_key=True, required=True)  # UNIQUE INDEX OF THE DB
     first_name = StringField()
     last_name = StringField()
-    sex = StringField(choices=('Female', 'Male'))
+    gender = StringField(choices=('Female', 'Male'))
     times_played = IntField(default=0)
     times_won = IntField(default=0)
     conversations = ListField(EmbeddedDocumentField(Conversation))  # a list of embeded conversations
     date_of_joining = DateTimeField(required=True, default=datetime.datetime.now)
 
 
-def create_player(facebook_id, first_name=None, last_name=None, sex=None):
+def create_player(facebook_id, first_name=None, last_name=None, gender=None):
     """A function used to create a player, given a new, unique facebook_id is provided.
     Sidenote: if the provided facebook_id is already present in the DB, the record is going to be updated"""
     player = Player(
         facebook_id=facebook_id,
         first_name=first_name,
         last_name=last_name,
-        sex=sex
+        gender=gender
     )
     player.save()
 
 
-def update_player(facebook_id, first_name=None, last_name=None, sex=None, times_played=None,
-                  times_won=None):
+def update_player(facebook_id, first_name=None, last_name=None, gender=None):
     """A function used to update player data."""
     query = Player.objects(facebook_id=facebook_id)  # finds the specific record via facebook_id
     if first_name is not None:
         query.update_one(set__first_name=first_name)
     if last_name is not None:
         query.update_one(set__last_name=last_name)
-    if sex is not None:
-        query.update_one(set__sex=sex)
-    if times_played is not None:
-        query.update_one(set__times_played=query[0].times_played + times_played)
-    # if you want to increment by one, provide 1 as the times_played function argument value
-    if times_won is not None:
-        query.update_one(set__times_won=query[0].times_won + times_won)
+    if gender is not None:
+        query.update_one(set__gender=gender)
 
 def update_player_results(facebook_id, times_won=None):
-    """A function used to update player results.
-    Content is similar to update_player function, but it's a bit quicker."""
+    """A function used to update player results."""
     query = Player.objects(facebook_id=facebook_id)  # finds the specific record via facebook_id
     query.update_one(set__times_played=query[0].times_played + 1)
     if times_won == 1:
