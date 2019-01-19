@@ -1,5 +1,6 @@
 import random
-from code import mongodb_connection as db
+#from code import mongodb_connection as db
+from code import mysql_connection as db
 from code.fb_messenger import *
 from code import bot_behaviour
 from time import sleep
@@ -14,7 +15,7 @@ def play_a_round(userid, user_choice):
     game_outcome = -1
     # establish game outcome
     if user_choice == bot_choice:
-        game_outcome = None
+        game_outcome = -1
     elif user_choice == 'rock':
         if bot_choice == 'paper':
             game_outcome = 0
@@ -35,7 +36,7 @@ def play_a_round(userid, user_choice):
         #raise Exception('Function input data does not fit the assumptions. Please check doctype')
 
     # establish return statements and update the database
-    # winner bot -> 0; winner player -> 1; draw =-> None"
+    # winner bot -> 0; winner player -> 1; draw =-> -1"
     db.update_player_results(userid, game_outcome)
     return [game_outcome, bot_choice]
 
@@ -55,7 +56,7 @@ def play(user_message = "", userid="", bot=""):
         return "Game started"
     elif choice == "rock" or choice == "paper" or choice == "scissors":
         game_outcome = play_a_round(userid, choice)
-        if game_outcome[0] is None:
+        if game_outcome[0] is -1:
             response = ["Uff! It's a draw!", "Tie!"]
         elif game_outcome[0] == 0:
             response = ["Hah! I won!", "I'm just lucky :)"]
