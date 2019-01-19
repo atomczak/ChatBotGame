@@ -82,16 +82,10 @@ def create_player(facebook_id, first_name=None, last_name=None, gender=None):
 def add_conversation(facebook_id, who_said_it, message_content, message_timestamp=None, message_intent=None):
     """A function used to add a conversation to the specific player. """
     try:
-        if who_said_it == 'Bot':
-            bot_said = message_content
-            user_said = None
-        elif who_said_it == 'User':
-            bot_said = None
-            user_said = message_content
         add_conversation = ("INSERT INTO conversations "
-                      "(facebook_id, bot_said, user_said, message_timestamp, message_intent) "
-                      "VALUES (%s, %s, %s, %s, %s)")
-        data_conversation = (facebook_id, bot_said, user_said, message_timestamp, message_intent)
+                          "(facebook_id, message_content, who_said_it, message_timestamp, message_intent) "
+                          "VALUES (%s, %s, %s, %s, %s)")
+        data_conversation = (facebook_id, message_content, who_said_it, message_timestamp, message_intent)
         cursor.execute(add_conversation, data_conversation)
         cnx.commit()
         print('[LOG-DB] Added conversation using the following data: {}, {}, {}, {}, {}'.format(*data_conversation))
@@ -185,13 +179,13 @@ db_tables['conversation'] = (
     "CREATE TABLE `conversations` ("
     "  `conversation_no` int(1) NOT NULL AUTO_INCREMENT,"
     "  `facebook_id` char(25) NOT NULL,"
-    "  `bot_said` varchar(999),"
-    "  `user_said` varchar(999),"
+    "  `message_content` varchar(999),"
+    "  `who_said_it` enum('Bot','User'),"
     "  `message_timestamp` date,"
     "  `message_intent` varchar(255),"
     "  PRIMARY KEY (`facebook_id`,`conversation_no`), KEY `conversation_no` (`conversation_no`),"
     "  CONSTRAINT `conversation_ibfk_1` FOREIGN KEY (`facebook_id`) "
-    "     REFERENCES `players` (`facebook_id`) ON DELETE CASCADE"
+    "  REFERENCES `players` (`facebook_id`) ON DELETE CASCADE"
     ") ENGINE=InnoDB")
 
 local_config =  tokens.local_config
@@ -201,6 +195,6 @@ pythonanywhere_config = tokens.pythonanywhere_config
 """SETUP"""
 
 signal(SIGPIPE, SIG_DFL)
-cnx = connect_to_db(pythonanywhere_config)
+cnx = connect_to_db(local_config)
 create_database()
 create_tables()
