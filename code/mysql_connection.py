@@ -1,6 +1,7 @@
 import mysql.connector
 from mysql.connector import errorcode
 from code import tokens
+from signal import signal, SIGPIPE, SIG_DFL
 
 """Funtion definition"""
 
@@ -208,6 +209,7 @@ pythonanywhere_config = tokens.pythonanywhere_config
 
 """SETUP"""
 
+signal(SIGPIPE, SIG_DFL)
 cnx = connect_to_db(pythonanywhere_config)
 create_database()
 create_tables()
