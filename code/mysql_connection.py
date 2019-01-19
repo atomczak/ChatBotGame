@@ -21,6 +21,17 @@ def create_database():
             cnx.database = DB_NAME
         else:
             print(err)
+    try:
+        cursor.execute("""
+        ALTER DATABASE
+            RockPaperScissor$Players
+            CHARACTER SET = utf8mb4
+            COLLATE = utf8mb4_unicode_ci
+        """)
+        print ('[LOG-DB] Changed UTF')
+    except:
+        print('[LOG-DB] Failed to changed= UTF')
+
 
 def connect_to_db(connection_config):
     global cursor
@@ -83,10 +94,19 @@ def add_conversation(facebook_id, who_said_it, message_content, message_timestam
         cursor.execute(add_conversation, data_conversation)
         cnx.commit()
         print('[LOG-DB] Added conversation using the following data: {}, {}, {}, {}, {}'.format(*data_conversation))
-    except mysql.connector.IntegrityError as err:
-        print("[LOG-DB] Error: {}".format(err))
     except:
-        raise Exception("""[LOG-DB] Function input data does not fit the assumptions. Please specify who_said_it field properly. Options are: 'Bot' or 'User'""")
+        add_conversation = ("INSERT INTO conversations "
+                      "(facebook_id, bot_said, user_said, message_timestamp, message_intent) "
+                      "VALUES (%s, %s, %s, %s, %s)")
+        data_conversation = (facebook_id, 'Broken', 'Broken', message_timestamp, message_intent)
+        cursor.execute(add_conversation, data_conversation)
+        cnx.commit()
+        print('[LOG-DB] BROKEN')
+    #except mysql.connector.IntegrityError as err:
+        #print("[LOG-DB] Error: {}".format(err))
+    #except Exception as e:
+        #raise Exception("""[LOG-DB] Function input data does not fit the assumptions. Please specify who_said_it field properly. Options are: 'Bot' or 'User'""")
+        #print (e)
 
 def update_player_results(facebook_id, times_won=None):
     """A function used to update player results."""
@@ -136,7 +156,7 @@ def query(facebook_id, fields_to_query):
     str_facebook_id = "'" + facebook_id + "'"
     str_fields_to_query = ','.join(fields_to_query)
     query =  """SELECT %s
-             FROM players 
+             FROM players
              WHERE facebook_id = %s""" % (str_fields_to_query, str_facebook_id)
     cursor.execute(query)
     result = cursor.fetchone()
@@ -144,7 +164,7 @@ def query(facebook_id, fields_to_query):
 
 def get_all(fields_to_get):
     query =  """SELECT %s
-             FROM players 
+             FROM players
              """ % (fields_to_get)
     cursor.execute(query)
     result = cursor.fetchall()

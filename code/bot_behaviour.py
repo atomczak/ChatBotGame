@@ -60,7 +60,8 @@ def add_new_user(user_id):
         users.append(user_id)
     else:
         #TODO withdraw more info from the database.
-        db.query(user_id, (first_name,))
+        # db.query(user_id, (first_name,))
+        pass
 
 def handle_text(message, userid, bot):
     """ React when the user sends any text. """
@@ -116,7 +117,7 @@ def regex_pattern_matcher(str, pattern_dic=pattern_dictionary):
     """Regular Expression pattern finder that searches for intents from patternDictionary."""
     intent = False
     search_object = False
-    for key, value in pattern_dictionary.items():
+    for key, value in pattern_dic.items():
         if type(value) == list:
             for v in value:
                 s = re.search(v, str, re.M|re.I|re.U)    #|re.U

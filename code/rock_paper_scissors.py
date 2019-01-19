@@ -56,13 +56,12 @@ def play(user_message = "", userid="", bot=""):
         return "Game started"
     elif choice == "rock" or choice == "paper" or choice == "scissors":
         game_outcome = play_a_round(userid, choice)
-        if game_outcome[0] is -1:
-            response = ["Uff! It's a draw!", "Tie!"]
+        if game_outcome[0] == -1:
+            response = random.choice(["Uff! It's a draw!", "Tie!"])
         elif game_outcome[0] == 0:
-            response = ["Hah! I won!", "I'm just lucky :)"]
+            response = random.choice(["Hah! I won!", "I'm just lucky :)"])
         elif game_outcome[0] == 1:
-            response = ["Damm! I lost!", "You win!"]
-        sleep(0.2)
+            response = random.choice(["Damm! I lost!", "You win!"])
         bot.fb_send_text_message(userid, game_outcome[1])
         db.add_conversation(userid, 'Bot', game_outcome[1])
         sleep(0.2)
