@@ -11,17 +11,17 @@ def create_database():
     try:
         cursor.execute("CREATE DATABASE {} ".format(DB_NAME))
     except mysql.connector.Error as err:
-        print("[LOG-DB] Failed creating database: {}".format(err))
+        print("[LOG-DBSQL-ERROR] Failed creating database: {}".format(err))
     try:
         cursor.execute("USE {}".format(DB_NAME))
     except mysql.connector.Error as err:
-        print("[LOG-DB] Database {} does not exists.".format(DB_NAME))
+        print("[LOG-DBSQL-INFO] Database {} does not exists.".format(DB_NAME))
         if err.errno == errorcode.ER_BAD_DB_ERROR:
             create_database()
-            print("[LOG-DB] Database {} created successfully.".format(DB_NAME))
+            print("[LOG-DBSQL-INFO] Database {} created successfully.".format(DB_NAME))
             cnx.database = DB_NAME
         else:
-            print(err)
+            print('LOG-DBSQL-ERROR ' + str(err))
     try:
         cursor.execute("""
         ALTER DATABASE
@@ -29,9 +29,9 @@ def create_database():
             CHARACTER SET = utf8mb4
             COLLATE = utf8mb4_unicode_ci
         """)
-        print ('[LOG-DB] Changed UTF')
+        print ('[LOG-DBSQL-INFO] Changed UTF')
     except:
-        print('[LOG-DB] Failed to changed= UTF')
+        print('[LOG-DBSQL-INFO] Failed to changed= UTF')
 
 
 def connect_to_db(connection_config):
@@ -41,9 +41,9 @@ def connect_to_db(connection_config):
         cursor = cnx.cursor()
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            print("[LOG-DB] Something is wrong with your user name or password")
+            print("[LOG-DBSQL-ERROR] Something is wrong with your user name or password")
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            print("[LOG-DB] Database does not exist")
+            print("[LOG-DBSQL-ERROR] Database does not exist")
         else:
             print(err)
     else:
@@ -53,13 +53,31 @@ def create_tables():
     for table_name in db_tables:
         table_description = db_tables[table_name]
         try:
-            print("[LOG-DB] Creating table {}: ".format(table_name), end='')
+            print("[LOG-DBSQL-INFO] Creating table {}: ".format(table_name), end='')
             cursor.execute(table_description)
+            try:
+                cursor.execute("""
+                ALTER TABLE %s
+                CONVERT TO CHARACTER SET utf8mb4
+                COLLATE utf8mb4_unicode_ci""" % (table_name))
+                print("[LOG-DBSQL-INFO] Table charset altering suceeded")
+            except:
+                print("[LOG-DBSQL-DEBUG] Table charset altering failed")
+            try:
+                cursor.execute("""
+                ALTER TABLE conversations
+                CHANGE message_content message_content
+                VARCHAR(999)
+                CHARACTER SET utf8mb4
+                COLLATE utf8mb4_unicode_ci;""")
+                print("[LOG-DBSQL-INFO] Column charset altering suceeded")
+            except:
+                print("[LOG-DBSQL-DEBUG] Column charset altering failed")
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
                 print("already exists.")
             else:
-                print(err.msg)
+                print('[LOG-DBSQL-DEBUG] ' + str(err.msg))
         else:
             print("OK")
 
@@ -75,9 +93,9 @@ def create_player(facebook_id, first_name=None, last_name=None, gender=None):
         data_player = (facebook_id, first_name, last_name, gender,times_played, times_won, times_drew, times_lost)
         cursor.execute(add_player, data_player)
         cnx.commit()
-        print ('[LOG-DB] Added user {} using the following data: {}, {}, {}, {}, {}, {}, {}'.format(*data_player))
+        print ('[LOG-DBSQL-INFO] Added user {} using the following data: {}, {}, {}, {}, {}, {}, {}'.format(*data_player))
     except mysql.connector.IntegrityError as err:
-        print("[LOG-DB] Error: {}".format(err))
+        print("[LOG-DBSQL-ERROR] Error: {}".format(err))
 
 def add_conversation(facebook_id, who_said_it, message_content, message_timestamp=None, message_intent=None):
     """A function used to add a conversation to the specific player. """
@@ -88,11 +106,19 @@ def add_conversation(facebook_id, who_said_it, message_content, message_timestam
         data_conversation = (facebook_id, message_content, who_said_it, message_timestamp, message_intent)
         cursor.execute(add_conversation, data_conversation)
         cnx.commit()
-        print('[LOG-DB] Added conversation using the following data: {}, {}, {}, {}, {}'.format(*data_conversation))
-    except mysql.connector.IntegrityError as err:
-        print("[LOG-DB] Error: {}".format(err))
-    except:
-        raise Exception("""[LOG-DB] Function input data does not fit the assumptions. Please specify who_said_it field properly. Options are: 'Bot' or 'User'""")
+        print('[LOG-DBSQL-INFO] Added conversation using the following data: {}, {}, {}, {}, {}'.format(*data_conversation))
+    except:  #TODO -> FIX THIS EMOJI PROBLEM
+        try:
+            add_conversation = ("INSERT INTO conversations "
+                              "(facebook_id, message_content, who_said_it, message_timestamp, message_intent) "
+                              "VALUES (%s, %s, %s, %s, %s)")
+            data_conversation = (facebook_id, 'unhandled emoji', who_said_it, message_timestamp, message_intent)
+            cursor.execute(add_conversation, data_conversation)
+            cnx.commit()
+            print('[LOG-DBSQL-INFO] Added conversation emoji using the following data: {}, {}, {}, {}, {}'.format(*data_conversation))
+        except:
+            raise Exception("""[LOG-DB] Function input data does not fit the assumptions. Please specify who_said_it field properly. Options are: 'Bot' or 'User'""")
+
 
 def update_player_results(facebook_id, times_won=None):
     """A function used to update player results."""
@@ -175,7 +201,7 @@ db_tables['players'] = (
     "  PRIMARY KEY (`facebook_id`)"
     ") ENGINE=InnoDB")
 
-db_tables['conversation'] = (
+db_tables['conversations'] = (
     "CREATE TABLE `conversations` ("
     "  `conversation_no` int(1) NOT NULL AUTO_INCREMENT,"
     "  `facebook_id` char(25) NOT NULL,"
@@ -185,7 +211,7 @@ db_tables['conversation'] = (
     "  `message_intent` varchar(255),"
     "  PRIMARY KEY (`facebook_id`,`conversation_no`), KEY `conversation_no` (`conversation_no`),"
     "  CONSTRAINT `conversation_ibfk_1` FOREIGN KEY (`facebook_id`) "
-    "  REFERENCES `players` (`facebook_id`) ON DELETE CASCADE"
+    "     REFERENCES `players` (`facebook_id`) ON DELETE CASCADE"
     ") ENGINE=InnoDB")
 
 local_config =  tokens.local_config
@@ -195,6 +221,6 @@ pythonanywhere_config = tokens.pythonanywhere_config
 """SETUP"""
 
 signal(SIGPIPE, SIG_DFL)
-cnx = connect_to_db(local_config)
+cnx = connect_to_db(pythonanywhere_config)
 create_database()
 create_tables()
