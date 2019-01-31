@@ -70,16 +70,16 @@ def handle_text(message, userid, bot):
     user_message = message.get('text')
     if entity == "" or entity is None:
         entity = regex_pattern_matcher(user_message)   #no entity from NLP so try to find with regex
-        print("[LOG-BOTB-CHAT] #{0}: '{1}' [REGX: {2}].".format(str(userid)[0:4], user_message, entity))
+        print("[LOG-BOTB-CHAT] #{0}: '{1}' [REGX: {2}].".format(str(userid), user_message, entity))
     else:
-        print("[LOG-BOTB-CHAT] #{0}: '{1}' [NLP: {2} ({3})].".format(str(userid)[0:4], user_message, entity[0], entity[1]))
+        print("[LOG-BOTB-CHAT] #{0}: '{1}' [NLP: {2} ({3})].".format(str(userid), user_message, entity[0], entity[1]))
         entity = entity[0]
     # React:
     response = responder(entity, user_message, userid, bot)   #prepare the response based on the entity given
     if type(response) == list:
         response = random.choice(response)
     bot.fb_send_text_message(userid, response)
-    db.add_conversation(userid, 'User', text)
+    db.add_conversation(userid, 'User', user_message)
     db.add_conversation(userid, 'Bot', response)
 
 def handle_sticker(message, userid, bot):
@@ -89,10 +89,10 @@ def handle_sticker(message, userid, bot):
     sticker_name = recognize_sticker(sticker_id)
     response = sticker_response(sticker_name)
     bot.fb_send_text_message(userid, response)
-    db.add_conversation(userid,'User', '<sticker_{0}_{1}>'.format(sticker_name, str(sticker_id))
+    db.add_conversation(userid,'User', '<sticker_{0}_{1}>'.format(sticker_name, str(sticker_id)))
     db.add_conversation(userid,'Bot', response)
-    print("[LOG-BOTB-CHAT] #{0}: <sticker_{0}_{1}>".format(str(userid)[0:4], sticker_name, str(sticker_id)))
-    print("[LOG-BOTB-CHAT] Bot: '{0}' [To: #{1}]".format(response, str(userid)[0:4]))
+    print("[LOG-BOTB-CHAT] #{0}: <sticker_{0}_{1}>".format(str(userid), sticker_name, str(sticker_id)))
+    print("[LOG-BOTB-CHAT] Bot: '{0}' [To: #{1}]".format(response, str(userid)))
 
 def handle_attachment(message, userid, bot):
     """ React when the user sends a GIF, photos, videos, or any other non-text item."""
@@ -102,8 +102,8 @@ def handle_attachment(message, userid, bot):
     #or from local file: #bot.fb_send_image(userid, r'..\resources\CogitoErgoSum.jpg')
     db.add_conversation(userid,'User','<GIF>')
     db.add_conversation(userid, 'Bot', "<GIF>")
-    print("[LOG-BOTB-CHAT] #{0}: <GIF>".format(str(userid)[0:4]))
-    print("[LOG-BOTB-CHAT] Bot: '{0}' [To: #{1}]".format('<GIF>', str(userid)[0:4]))
+    print("[LOG-BOTB-CHAT] #{0}: <GIF>".format(str(userid)))
+    print("[LOG-BOTB-CHAT] Bot: '{0}' [To: #{1}]".format('<GIF>', str(userid)))
 
 def regex_pattern_matcher(str, pat_dic=pattern_dictionary):
     """Regular Expression pattern finder that searches for intents from patternDictionary."""

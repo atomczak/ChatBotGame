@@ -9,8 +9,10 @@ import requests
 from requests_toolbelt import MultipartEncoder
 from time import sleep
 import random
-from code import mongodb_connection as db
+#from code import mongodb_connection as db
+from code import mysql_connection as db
 # For token veryfication:
+from code import tokens
 import hashlib
 import hmac
 import six
@@ -133,7 +135,7 @@ class Bot:
             Response from API as <dict>
         """
         if type(message) == list: message = random.choice(message)
-        print("[LOG-FBMSG-CHAT] Bot: '{0}' [To: #{1}]".format(message, str(userid)[0:4]))
+        print("[LOG-FBMSG-CHAT] Bot: '{0}' [To: #{1}]".format(message, str(userid)))
         return self.fb_send_message(userid, {
             'text': message
         }, notification_type)
@@ -147,7 +149,7 @@ class Bot:
         Output:
             Response from API as <dict>
         """
-        print("[LOG-FBMSG-DEBUG] Problem when sending generic message.")
+        print("[LOG-FBMSG-DEBUG] Trying to send generic message.")
 
         elements = self.fb_define_elements(element_titles)
 
@@ -170,7 +172,7 @@ class Bot:
         Output:
             Response from API as <dict>
         """
-        print("[LOG-FBMSG-DEBUG] Problem when sending list message.")
+        print("[LOG-FBMSG-DEBUG] Trying to send list message.")
 
         elements = self.fb_define_elements(element_titles)
         buttons = self.fb_define_buttons(button_names)
@@ -197,7 +199,7 @@ class Bot:
         Output:
             Response from API as <dict>
         """
-        print("[LOG-FBMSG-DEBUG] Problem when sending button message.")
+        print("[LOG-FBMSG-DEBUG] Trying to send button message.")
         buttons = self.fb_define_buttons(button_names)
 
         return self.fb_send_message(userid, {

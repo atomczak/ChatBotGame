@@ -91,7 +91,7 @@ def sticker_response(sticker_name):
         'dogo' : "Cute dog :)",
         'dogo_great' : "I know it's great, that's what I do!",
         'bird' : "I don't like birds, including doves",
-        'cat : '"Miauuuu :)",
+        'cat' : "Miauuuu :)",
         'monkey' : "🙈 🙉 🙊",
         'emoji' : "Thats a big emoji",
         'turtle' : "It reminds me of my turtle... R.I.P",
