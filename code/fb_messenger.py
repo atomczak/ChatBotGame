@@ -17,6 +17,15 @@ import six
 
 DEFAULT_API_VERSION = 3.2   #2.6
 
+def verify_fb_token(token_sent):
+    """Take token sent by facebook and verify if it matches"""
+    if token_sent == tokens.fb_verification:
+        return request.args.get("hub.challenge")
+        print("[LOG-FBMSG-INFO] FB token verification succesfull.")
+    else:
+        print("[LOG-FBMSG-INFO] Failed to verify FB token.")
+    return 'Invalid verification token'
+
 class NotificationType(Enum):
     regular = "REGULAR"
     silent_push = "SILENT_PUSH"
@@ -124,6 +133,7 @@ class Bot:
             Response from API as <dict>
         """
         if type(message) == list: message = random.choice(message)
+        print("[LOG-FBMSG-CHAT] Bot: '{0}' [To: #{1}]".format(message, str(userid)[0:4]))
         return self.fb_send_message(userid, {
             'text': message
         }, notification_type)
@@ -137,6 +147,8 @@ class Bot:
         Output:
             Response from API as <dict>
         """
+        print("[LOG-FBMSG-DEBUG] Problem when sending generic message.")
+
         elements = self.fb_define_elements(element_titles)
 
         return self.fb_send_message(userid, {
@@ -158,6 +170,8 @@ class Bot:
         Output:
             Response from API as <dict>
         """
+        print("[LOG-FBMSG-DEBUG] Problem when sending list message.")
+
         elements = self.fb_define_elements(element_titles)
         buttons = self.fb_define_buttons(button_names)
 
@@ -183,6 +197,7 @@ class Bot:
         Output:
             Response from API as <dict>
         """
+        print("[LOG-FBMSG-DEBUG] Problem when sending button message.")
         buttons = self.fb_define_buttons(button_names)
 
         return self.fb_send_message(userid, {

@@ -11,7 +11,7 @@ def play_a_round(userid, user_choice):
     winner bot -> 0; winner player -> 1; draw =-> None"""
     choices = ['rock', 'paper', 'scissors']
     bot_choice = random.choice(choices)
-    print("[LOG-GAME] User chose: " + user_choice + " Bot chose: " + bot_choice)
+    print("[LOG-GAME-INFO] User chose: " + user_choice + " Bot chose: " + bot_choice)
     game_outcome = -1
     # establish game outcome
     if user_choice == bot_choice:
@@ -48,13 +48,13 @@ def play(user_message = "", userid="", bot=""):
         "scissors" :  [r'scissors', r'✌']
     }
     choice = bot_behaviour.regex_pattern_matcher(user_message, rps_pattern)
-    print("[LOG-TEMP] choice is: "+str(choice))
     if choice == "new_game":
         entry_message = random.choice(["Which one do you choose?", "so, rock, paper or scissors?", "ok, let's play!"])
         bot.fb_send_quick_replies(userid, entry_message, ["✊ rock","✋ paper","✌ scissors"])
-        print("[LOG-MESG] User #{0} started a new RPS game with: '{1}'.".format(str(userid)[0:4], str(user_message)))
+        print("[LOG-GAME-INFO] User #{0} started a new RPS game with: '{1}'.".format(str(userid)[0:4], str(user_message)))
         return "Game started"
     elif choice == "rock" or choice == "paper" or choice == "scissors":
+        print("[LOG-GAME-INFO] User has choosen: "+str(choice))
         game_outcome = play_a_round(userid, choice)
         if game_outcome[0] == -1:
             response = random.choice(["Uff! It's a draw!", "Tie!"])
@@ -62,6 +62,8 @@ def play(user_message = "", userid="", bot=""):
             response = random.choice(["Hah! I won!", "I'm just lucky :)"])
         elif game_outcome[0] == 1:
             response = random.choice(["Damm! I lost!", "You win!"])
+        else:
+            response = "I can't play this game."
         bot.fb_send_text_message(userid, game_outcome[1])
         db.add_conversation(userid, 'Bot', game_outcome[1])
         sleep(0.2)

@@ -12,6 +12,7 @@ from code.resources import *
 from code.fb_messenger import Bot
 from code import rock_paper_scissors as rps
 from flask import Flask, request
+import pprint
 
 #initiate the bot object:
 bot = Bot(tokens.fb_access)
@@ -21,22 +22,23 @@ users = []
 for user in db.get_all('facebook_id'):
     users.append(user)
 
-def verify_fb_token(token_sent):
-    """Take token sent by facebook and verify if it matches"""
-    if token_sent == tokens.fb_verification:
-        return request.args.get("hub.challenge")
-        print("[LOG-VERI] Token verification succesfull.")
-    else:
-        print("[LOG-VERI] Failed to verify token.")
-    return 'Invalid verification token'
-
 def handle_messages(user_message):
     """ Recognize the content and respond accordingly. """
     for event in user_message['entry']:
         messaging = event['messaging']
         for message in messaging:
             userid = message['sender']['id']   #sender, thus our recipient id
-            if message.get('message'):
+            if message.get('delivery'):
+                if int(message['recipient']['id']) == int(tokens.fb_bot_id):
+                    print("[LOG-BOTB-INFO] Message from the user #{0} delivered to the bot.".format(str(userid)))
+                else:
+                    print("[LOG-BOTB-INFO] Bot's message delivered to the user #{0}.".format(str(message['recipient']['id'])))
+            elif message.get('read'):
+                if int(message['recipient']['id']) == int(tokens.fb_bot_id):
+                    print("[LOG-BOTB-INFO] Bot has read the message from the user #{0}.".format(str(userid)))
+                else:
+                    print("[LOG-BOTB-INFO] Bot's message has been seen by the user #{0}.".format(str(message['recipient']['id'])))
+            elif message.get('message'):
                 bot.fb_send_action(userid, 'mark_seen')
                 add_new_user(userid)
                 message = message['message']
@@ -47,10 +49,9 @@ def handle_messages(user_message):
                         handle_sticker(message, userid, bot)
                     elif message.get('attachments'):
                         handle_attachment(message, userid, bot)
-            elif message.get('delivery'):
-                print("[LOG-DELI] Message from #{0} delivered to #{1}.".format(str(userid)[0:4], str(message['recipient']['id'])[0:4]))
-            elif message.get('read'):
-                print("[LOG-SEEN] Message from #{0} read by #{1}.".format(str(userid)[0:4], str(message['recipient']['id'])[0:4]))
+            else:
+                print("[LOG-BOTB-ERR] Unknown message type! Content below:")
+                pprint.pprint(message)  # print json content
 
 def add_new_user(user_id):
     """ Check if already exists. If not - add to database. """
@@ -65,42 +66,33 @@ def add_new_user(user_id):
 
 def handle_text(message, userid, bot):
     """ React when the user sends any text. """
-    text = message.get('text')
-    entity = best_match_entity(message)
+    entity = best_entity(message)
     user_message = message.get('text')
     if entity == "" or entity is None:
         entity = regex_pattern_matcher(user_message)   #no entity from NLP so try to find with regex
-    print("[LOG-MESG] User #{0} said: '{1}' and I recognize it as: {2}.".format(str(userid)[0:4], str(message.get('text')), entity))
-    if entity == "rock-paper-scissors":
-        rps.play(user_message, userid, bot)     #TODO not working
-        print("[LOG-ERROR-001]")
-    elif entity == 'test_list_message':
-        bot.fb_send_list_message(userid, ['a', 'b'], ['a', 'b'])        #TODO not working
-        print("[LOG-ERROR-002]")
-    elif entity == 'test_button_message':
-        bot.fb_send_button_message(userid, "test", ['a', 'b'])      #TODO not working
-        print("[LOG-ERROR-003]")
-    elif entity == 'test_generic_message':
-        bot.fb_send_generic_message(userid, ['a', 'b'])     #TODO not working
-        print("[LOG-ERROR-004]")
+        print("[LOG-BOTB-CHAT] #{0}: '{1}' [REGX: {2}].".format(str(userid)[0:4], user_message, entity))
     else:
-        response = responder(entity, user_message, userid, bot)   #prepare the response based on the entity given
-        if type(response) == list:
-            response = random.choice(response)
-        bot.fb_send_text_message(userid, response)
-        db.add_conversation(userid, 'User', text)
-        db.add_conversation(userid,'Bot', response)
-        print("[LOG-RESP] Bot has answered: '" + str(message) + "'.")
+        print("[LOG-BOTB-CHAT] #{0}: '{1}' [NLP: {2} ({3})].".format(str(userid)[0:4], user_message, entity[0], entity[1]))
+        entity = entity[0]
+    # React:
+    response = responder(entity, user_message, userid, bot)   #prepare the response based on the entity given
+    if type(response) == list:
+        response = random.choice(response)
+    bot.fb_send_text_message(userid, response)
+    db.add_conversation(userid, 'User', text)
+    db.add_conversation(userid, 'Bot', response)
 
 def handle_sticker(message, userid, bot):
     """ React when the user sends a sticker. """
     bot.fb_fake_typing(userid, 0.5)
-    response = recognize_sticker(str(message.get('sticker_id')))
+    sticker_id = str(message.get('sticker_id'))
+    sticker_name = recognize_sticker(sticker_id)
+    response = sticker_response(sticker_name)
     bot.fb_send_text_message(userid, response)
-    db.add_conversation(userid,'User', '<sticker_'+str(message.get('sticker_id'))+'>')
+    db.add_conversation(userid,'User', '<sticker_{0}_{1}>'.format(sticker_name, str(sticker_id))
     db.add_conversation(userid,'Bot', response)
-    print("[LOG-MESG] User #{0} sent a sticker.".format(str(userid)[0:4]))
-    print('[LOG-MESG] Bot answered to user #{0}: "{1}"'.format(str(userid)[0:4], str(response)))
+    print("[LOG-BOTB-CHAT] #{0}: <sticker_{0}_{1}>".format(str(userid)[0:4], sticker_name, str(sticker_id)))
+    print("[LOG-BOTB-CHAT] Bot: '{0}' [To: #{1}]".format(response, str(userid)[0:4]))
 
 def handle_attachment(message, userid, bot):
     """ React when the user sends a GIF, photos, videos, or any other non-text item."""
@@ -109,15 +101,15 @@ def handle_attachment(message, userid, bot):
     bot.fb_send_image_url(userid, image_url)
     #or from local file: #bot.fb_send_image(userid, r'..\resources\CogitoErgoSum.jpg')
     db.add_conversation(userid,'User','<GIF>')
-    db.add_conversation(userid, 'Bot', "<picture>")
-    print("[LOG-MESG] User #{0} sent a GIF.".format(str(userid)[0:4]))
-    print("[LOG-RESP] Bot has answered with a picture.")
+    db.add_conversation(userid, 'Bot', "<GIF>")
+    print("[LOG-BOTB-CHAT] #{0}: <GIF>".format(str(userid)[0:4]))
+    print("[LOG-BOTB-CHAT] Bot: '{0}' [To: #{1}]".format('<GIF>', str(userid)[0:4]))
 
-def regex_pattern_matcher(str, pattern_dic=pattern_dictionary):
+def regex_pattern_matcher(str, pat_dic=pattern_dictionary):
     """Regular Expression pattern finder that searches for intents from patternDictionary."""
     intent = False
     search_object = False
-    for key, value in pattern_dic.items():
+    for key, value in pat_dic.items():
         if type(value) == list:
             for v in value:
                 s = re.search(v, str, re.M|re.I|re.U)    #|re.U
@@ -127,7 +119,7 @@ def regex_pattern_matcher(str, pattern_dic=pattern_dictionary):
         if search_object: intent = key   #cause found searchObj.group()
     return intent
 
-def best_match_entity(message, minimum=0.9):
+def best_entity(message, minimum=0.85):
     """ Return best matching entity from NLP or None. """
     try:
         entities = list(message.get('nlp').get('entities').keys())
@@ -135,14 +127,12 @@ def best_match_entity(message, minimum=0.9):
         confidence = []
         for c in list(message.get('nlp').get('entities').values()):
             confidence.append(c[0]['confidence'])
-        print("[LOG-TEMP] max confidence: "+str(max(confidence)))
         if max(confidence)>minimum:
             # create dictionary entity:confidence:
             iterable = zip(entities, confidence)
             pairs = {key: value for (key, value) in iterable}
             best_match = max(pairs, key=pairs.get)
-            print("[LOG-ENTY] Recognized entities: {0}, best is: '{1}'.".format(str(pairs), best_match))
-            return best_match
+            return [best_match, str(max(confidence))]
         else:
             return None
     except:
