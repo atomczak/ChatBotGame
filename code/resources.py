@@ -1,5 +1,8 @@
 import random
 from code import rock_paper_scissors as rps
+from code.fb_messenger import Bot
+from code import tokens
+from code import mysql_connection as db
 
 #Set of intents and patterns to recognize them:
 pattern_dictionary = {
@@ -15,7 +18,7 @@ pattern_dictionary = {
         'uname' : [r'y?o?ur\sname\??', r'(how|what)[\s\S]{1,15}call(ing)?\sy?o?u\??'],
         'ureal' : r'\by?o?u\s(real|true|bot|ai|human|person|man)\b',
         "secret" : r'(secret|password|key)',
-        "rps-game" : [r'start', r'play', r'game', r'rock ?paper ?scissors', r'rock', r'✊', r'paper', r'✋', r'scissors', r'✌'],
+        "rpsgame" : [r'start', r'play', r'game', r'rock ?paper ?scissors', r'rock', r'✊', r'paper', r'✋', r'scissors', r'✌'],
         "love" : r'love',
         #"love" : [r'love',r'(\❤️|\🧡|\💛|\💚|\💙|\💜|\🖤)'],
         'test_list_message': r'list message',
@@ -27,37 +30,142 @@ pattern_dictionary = {
 
 #Set of responses for particular intents:
 def responder(intent, user_message="", userid="", bot=""):
-    return {
-        "greetings": "{0}! How are you doing?".format(user_message.split(' ', 1)[0].capitalize()),
-        "yes": ["You confirm, good","great","perfect","good","(y)"],
-        "no": [":(","nooo","why not?","Nobody says no to me!"],
-        "maybe" : "'{0}'? You should be sure by now.".format(user_message.capitalize()),
-        "curse" : ["you {0}".format(user_message),"not nice","Calm down!","same for you","yeah? you too"],
-        "rps-game" : "",
-        "uname" : ["My name is Khan 😎","chicka-chicka Slim Shady 😎","👽","🤖","they call me the man with no name"],
-        "ureal" : ["Cogito Ergo Sum","What is real?"],
-        "secret" : ["😈","😎","💩","🤠","💀","👽","🤖","🙈🙉🙊"],
-        "love" : "I love you too {0}{1}{2}!".format(random.choice(["❤️","🧡","💛","💚","💙","💜","🖤"]),random.choice(["❤️","🧡","💛","💚","💙","💜","🖤"]),random.choice(["❤️","🧡","💛","💚","💙","💜","🖤"])),
-        "thanks" : ["No problem","My pleasure!"],
-        "datetime" : "Let me check in my calendar...",
-        "amount_of_money" : "💰💰💰!",
-        "phone_number" : "My 📞 is 123-123-123 ☎️",
-        "email" : "Email, how oldschool is that.",
-        "distance" : "it's not that far 🚗",
-        "quantity" : "ok, that's a lot.",
-        "temperature" : "brrrr ⛄️",
-        "volume" : "I can handle it.",
-        "location" : "I will check where it is on the map",
-        "duration" : "I got plenty of time ⌚️",
-        "url" : ["you mind if I don't open that?","cool link, what's that?","you want me to open it"],
-        "sentiment" : ["ehhh...","good old times."],
-        "rps-game" : rps.play(user_message, userid, bot),
-        'test_list_message' : bot.fb_send_list_message(userid, ['a', 'b'], ['a', 'b']), #TODO not working
-        'test_button_message' : bot.fb_send_button_message(userid, "test", ['a', 'b']), #TODO not working
-        'test_generic_message' : bot.fb_send_generic_message(userid, ['a', 'b']), #TODO not working
-        'test_quick_replies': bot.fb_send_quick_replies(userid, "This is a test of quick replies", ['a', 'b', 'c']), #TODO test if working
-        "bye" : "You going already? Goodbye then!"
-    }.get(intent, ["No idea what you mean by that.","huh?","I don't get it","pardon me?"])
+
+    switcher = {
+        "greetings":   greetings,
+        "yes":         yes,
+        "no":          no,
+        "maybe":       maybe,
+        "curse":       curse,
+        "rps-game":    rpsgame,
+        "uname":       uname,
+        "ureal":       ureal,
+        "secret":      secret,
+        "love":        love,
+        "thanks":      thanks,
+        "datetime":    datetime,
+        "money":       money,
+        "phone":       phone,
+        "email":       email,
+        "distance":    distance,
+        "quantity":    quantity,
+        "temperature": temperature,
+        "volume":      volume,
+        "location":    location,
+        "duration":    duration,
+        "url":         url,
+        "sentiment":   sentiment,
+        "rpsgame":     rpsgame,
+        "test_list_message":    test_list_message,
+        "test_button_message":  test_button_message,
+        "test_generic_message": test_generic_message,
+        "test_quick_replies":   test_quick_replies,
+        "bye":          bye
+    }
+    # Get the function from switcher dictionary
+    func = switcher.get(intent, lambda user_message, userid, bot : default_message)
+    # Execute the function
+    return func(user_message, userid, bot)
+
+def default_message(user_message, userid="", bot=""):
+    return ["No idea what you mean by that.","huh?","I don't get it","pardon me?"]
+
+def greetings(user_message, userid="", bot=""):
+    return "{0}! How are you doing?".format(user_message.split(' ', 1)[0].capitalize())
+
+def yes(user_message, userid="", bot=""):
+    return ["You confirm, good","great","perfect","good","(y)"]
+
+def no(user_message, userid="", bot=""):
+    return [":(","nooo","why not?","Nobody says no to me!"]
+
+def maybe(user_message, userid="", bot=""):
+    return "'{0}'? You should be sure by now.".format(user_message.capitalize())
+
+def curse(user_message, userid="", bot=""):
+    return ["you {0}".format(user_message, userid="", bot=""),"not nice","Calm down!","same for you","yeah? you too"]
+
+def rpsgame(user_message, userid="", bot=""):
+    rps.play(user_message, userid, bot)
+    return "already sent"
+
+def uname(user_message, userid="", bot=""):
+    return ["My name is Khan 😎","chicka-chicka Slim Shady 😎","👽","🤖","they call me the man with no name"]
+
+def ureal(user_message, userid="", bot=""):
+    return ["Cogito Ergo Sum","What is real?"]
+
+def secret(user_message, userid="", bot=""):
+    return ["😈","😎","💩","🤠","💀","👽","🤖","🙈🙉🙊"]
+
+def love(user_message, userid="", bot=""):
+    return "I love you too {0}{1}{2}!".format(random.choice(["❤️","🧡","💛","💚","💙","💜","🖤"]),random.choice(["❤️","🧡","💛","💚","💙","💜","🖤"]),random.choice(["❤️","🧡","💛","💚","💙","💜","🖤"]))
+
+def thanks(user_message, userid="", bot=""):
+    return ["No problem","My pleasure!"]
+
+def datetime(user_message, userid="", bot=""):
+    return "Let me check in my calendar..."
+
+def money(user_message, userid="", bot=""):
+    return "💰💰💰!"
+
+def phone(user_message, userid="", bot=""):
+    return "My 📞 is 123-123-123 ☎️"
+
+def email(user_message, userid="", bot=""):
+    return "Email, how oldschool is that."
+
+def distance(user_message, userid="", bot=""):
+    return "it's not that far 🚗"
+
+def quantity(user_message, userid="", bot=""):
+    return "ok, that's a lot."
+
+def temperature(user_message, userid="", bot=""):
+    return "brrrr ⛄️"
+
+def volume(user_message, userid="", bot=""):
+    return "I can handle it."
+
+def location(user_message, userid="", bot=""):
+    return "I will check where it is on the map"
+
+def duration(user_message, userid="", bot=""):
+    return "I got plenty of time ⌚️"
+
+def url(user_message, userid="", bot=""):
+    return ["you mind if I don't open that?","cool link, what's that?","you want me to open it"]
+
+def sentiment(user_message, userid="", bot=""):
+    return ["ehhh...","good old times."]
+
+def test_list_message(user_message, userid="", bot=""):
+    db.add_conversation(userid, 'User', user_message)
+    db.add_conversation(userid, 'Bot', '<sent list message>')
+    bot.fb_send_list_message(userid, ['a', 'b'], ['a', 'b']) #TODO not working
+    return "already sent"
+
+def test_button_message(user_message, userid="", bot=""):
+    db.add_conversation(userid, 'User', user_message)
+    db.add_conversation(userid, 'Bot', '<sent button message>')
+    bot.fb_send_button_message(userid, "test", ['a', 'b']) #TODO not working
+    return "already sent"
+
+def test_generic_message(user_message, userid="", bot=""):
+    db.add_conversation(userid, 'User', user_message)
+    db.add_conversation(userid, 'Bot', '<sent generic message>')
+    bot.fb_send_generic_message(userid, ['a', 'b']) #TODO not working
+    return "already sent"
+
+def test_quick_replies(user_message, userid="", bot=""):
+    db.add_conversation(userid, 'User', user_message)
+    db.add_conversation(userid, 'Bot', '<sent quick replies message>')
+    bot.fb_send_quick_replies(userid, "This is a test of quick replies", ['a', 'b', 'c']) #TODO test if working
+    return "already sent"
+
+def bye(user_message, userid="", bot=""):
+    return "You going already? Goodbye then!"
 
 def recognize_sticker(sticker_id):
     if sticker_id.startswith('369239263222822'):  sticker_name = 'thumb'

@@ -76,11 +76,12 @@ def handle_text(message, userid, bot):
         entity = entity[0]
     # React:
     response = responder(entity, user_message, userid, bot)   #prepare the response based on the entity given
-    if type(response) == list:
-        response = random.choice(response)
-    bot.fb_send_text_message(userid, response)
-    db.add_conversation(userid, 'User', user_message)
-    db.add_conversation(userid, 'Bot', response)
+    if response != "already sent":
+        if type(response) == list:
+            response = random.choice(response)
+        bot.fb_send_text_message(userid, response)
+        db.add_conversation(userid, 'User', user_message)
+        db.add_conversation(userid, 'Bot', response)
 
 def handle_sticker(message, userid, bot):
     """ React when the user sends a sticker. """
