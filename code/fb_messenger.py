@@ -17,6 +17,10 @@ import hashlib
 import hmac
 import six
 
+#TODO add a 'tag' NON_PROMOTIONAL_SUBSCRIPTION
+#TODO add a 'messaging_type' TYPE_MESSAGE_TYPE
+# https://developers.facebook.com/docs/messenger-platform/send-messages/message-tags
+
 DEFAULT_API_VERSION = 3.2   #2.6
 
 def verify_fb_token(token_sent):
@@ -140,7 +144,7 @@ class Bot:
             'text': message
         }, notification_type)
 
-    def fb_send_generic_message(self, userid, element_titles=['a', 'b'], notification_type=NotificationType.regular):
+    def fb_send_generic_message(self, userid, elements_titles=['a', 'b'], buttons_titles=['b1', 'b2'], notification_type=NotificationType.regular):
         """Send generic messages to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/generic-template
         Input:
@@ -151,7 +155,9 @@ class Bot:
         """
         print("[LOG-FBMSG-DEBUG] Trying to send generic message.")
 
-        elements = self.fb_define_elements(element_titles)
+        elements = self.fb_define_elements(elements_titles, buttons_titles)
+
+        print("[LOG-FBMSG-DEBUG] Generic elements made likt this: \n"+str(elements))
 
         return self.fb_send_message(userid, {
             "attachment": {
@@ -162,6 +168,78 @@ class Bot:
                 }
             }
         }, notification_type)
+
+"""
+    #TEMPORARY
+    def fb_send_test_message(self, userid, element_titles=['a', 'b'], notification_type=NotificationType.regular):
+        """
+        # Send generic messages to the specified recipient.
+        # https://developers.facebook.com/docs/messenger-platform/send-api-reference/generic-template
+        # Input:
+        #     userid: recipient id to send to
+        #     elements: generic message elements to send
+        # Output:
+        #     Response from API as <dict>
+        """
+        print("[LOG-FBMSG-DEBUG] Trying to send generic message.")
+
+        elements = self.fb_define_elements(element_titles)
+
+        return self.fb_send_message(userid, {
+            "attachment": {
+                "type": "template",
+                "payload": {
+                    "template_type": "generic",
+                    "elements": [
+                        {
+                            "title":"Praga",
+                            "image_url":"http://www.gatewayapartments.com.hk/img/GatewayApartments.png",
+                            "subtitle":"Zajebiste mieszkanie.",
+                            "default_action": {
+                                "type": "web_url",
+                                "url": "www.olx.com",
+                                "webview_height_ratio": "tall",
+                            },
+                            "buttons":[
+                                {
+                                    "type":"web_url",
+                                    "url":"www.olx.com",
+                                    "title":"Obczaj"
+                                },{
+                                    "type":"postback",
+                                    "title":"Napisz do nas",
+                                    "payload":"DEVELOPER_DEFINED_PAYLOAD"
+                                }
+                            ]
+                        },
+                        {
+                            "title":"Mokotów",
+                            "image_url":"http://www.holidayscefalu.com/Common/ThumbsX.aspx?I=7&Cosa=S&Lato=256&Formato=X&src=HolidaysCefalu_Appartamento_New_Suite_010.jpg",
+                            "subtitle":"Dla biedaka.",
+                            "default_action": {
+                                "type": "web_url",
+                                "url": "www.olx.com",
+                                "webview_height_ratio": "tall",
+                            },
+                            "buttons":[
+                                {
+                                    "type":"web_url",
+                                    "url":"www.olx.com",
+                                    "title":"Obczaj"
+                                },{
+                                    "type":"postback",
+                                    "title":"Napisz do nas",
+                                    "payload":"DEVELOPER_DEFINED_PAYLOAD"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }, notification_type)
+
+"""
+
 
     def fb_send_list_message(self, userid, element_titles=['a', 'b'], button_names=['a', 'b'], notification_type=NotificationType.regular):
         """Send generic messages to the specified recipient.
@@ -181,10 +259,10 @@ class Bot:
             "attachment": {
                 "type": "template",
                 "payload": {
-                "template_type": "list",
-                "top_element_style": "large",
-                    "elements": elements,
-                    "buttons": buttons
+                    "template_type": "list",
+                    "top_element_style": "large",
+                        "elements": elements,
+                        "buttons": buttons
                 }
             }
         }, notification_type)
@@ -220,22 +298,29 @@ class Bot:
             "title": str(b),
             "type": "web_url",
             "url": "https://google.com",
-            "messenger_extensions": "true",
+            #"messenger_extensions": "true",
             "webview_height_ratio": "tall",
             "fallback_url": "https://google.com"
             })
         return buttons
 
-    def fb_define_elements(self, element_titles=['a', 'b'], buttons=[]):
+    def fb_define_elements(self, element_titles=['a', 'b'], buttons=['c','d']):
         elements = []
         for e in element_titles:
             elements.append({
             "title": str(e),
             "subtitle": "This is a subtitle",
-            "image_url": "https://www.snk-corp.co.jp/us/neogeomini/img/main/top_neomini.png",
+            "image_url": "http://www.gatewayapartments.com.hk/img/GatewayApartments.png",
             "buttons": buttons,
+            "default_action": {
+                "type": "web_url",
+                "url": "www.olx.com",
+                "webview_height_ratio": "tall",
+                }
             })
         return elements
+
+
 
     def fb_send_action(self, userid, action, notification_type=NotificationType.regular):
         """Send typing indicators or send read receipts to the specified recipient.

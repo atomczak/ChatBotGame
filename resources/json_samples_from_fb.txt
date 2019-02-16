@@ -1,0 +1,94 @@
+_____ SAMPLE TEXT MESSAGE _________
+
+{'entry': [{
+   'id': '1368143226655403',
+   'messaging': [{
+      'message': {
+         'mid': 'GZ1aEkkMhti8WBa22tk5lXWJoZXN9QKZWH8NjK5DYEFKf7dFmM-QZEUThzNoJk73q2QSR5AD_aEDnRjNS6XHbw',
+         'nlp': {
+            'entities': {
+               'bye': [{
+                  '_entity': 'bye',
+                  'confidence': 0.29891659254789,
+                  'value': 'true'}],
+               'greetings': [{
+                  '_entity': 'greetings',
+                  'confidence': 0.99988770484656,
+                  'value': 'true'}],
+               'sentiment': [{
+                  '_entity': 'sentiment',
+                  'confidence': 0.54351806476846,
+                  'value': 'positive'},
+                  {'_entity': 'sentiment',
+                  'confidence': 0.43419978802319,
+                  'value': 'neutral'},
+                  {'_entity': 'sentiment',
+                  'confidence': 0.022282101881069,
+                  'value': 'negative'}],
+               'thanks': [{
+                  '_entity': 'thanks',
+                  'confidence': 0.056984366913182,
+                  'value': 'true'}]}},
+         'seq': 671186,
+         'text': 'hello'},
+   'recipient': {'id': '1368143226655403'},
+   'sender': {'id': '2231584683532589'},
+   'timestamp': 1550245454526}],
+   'time': 1550245455532}],
+'object': 'page'}
+
+_____ SAMPLE STICKER MESSAGE _________
+
+{'entry': [{
+   'id': '1368143226655403',
+   'messaging': [{
+      'message': {
+         'attachments': [{
+            'payload': {
+               'sticker_id': 139084406650204,
+               'url': 'https://scontent.xx.fbcdn.net/v/t39.1997-6/p100x100/18601789_139084409983537_1112176674583085056_n.png?_nc_cat=1&_nc_ad=z-m&_nc_cid=0&_nc_zor=9&_nc_ht=scontent.xx&oh=58dcff07f7efab2581eb2bf46ad09b69&oe=5D2622E6'},
+               'type': 'image'}],
+         'mid': 'vTPBDAg3IFSvojFSoA-hc3WJoZXN9QKZWH8NjK5DYEFtpDoGWGtpfyyd39iwwpoX3UKTT03qWPoLw9dKCPmgbw',
+         'seq': 671191,
+         'sticker_id': 139084406650204},
+      'recipient': {'id': '1368143226655403'},
+      'sender': {'id': '2231584683532589'},
+      'timestamp': 1550245813786}],
+   'time': 1550245814781}],
+'object': 'page'}
+
+_____ DELIVERY CONFIRMATION _________
+
+{'entry': [{
+   'id': '1368143226655403',
+   'messaging': [{
+      'delivery': {
+         'mids': [
+            'fJo_skAtj0UAj5GgomOw53WJoZXN9QKZWH8NjK5DYEE9B5dnUilQaMt-2X-DZRfZPmQnzikom5h1pXysIono0w',
+            'THFi2alVD8V3n83TUhy5IXWJoZXN9QKZWH8NjK5DYEHQCUziMeG424BvnntyRSwsrCFBtvlVEcJc2g3akNjrsg',
+            'a0jKJ7wGYETe-n5xjhOK-nWJoZXN9QKZWH8NjK5DYEGO9a4neOVsmrjMyO4OkNUliCY0OnwVakSKkc1C2_c55g'],
+         'seq': 0,
+         'watermark': 1550245456341},
+      'recipient': {'id': '1368143226655403'},
+      'sender': {'id': '2231584683532589'},
+      'timestamp': 1550245459149}],
+   'time': 1550245459170}],
+'object': 'page'}
+
+_____ READ CONFIRMATION  _________
+
+{'entry': [{
+   'id': '1368143226655403',
+   'messaging': [{
+      'delivery': {
+         'mids': [
+            'fJo_skAtj0UAj5GgomOw53WJoZXN9QKZWH8NjK5DYEE9B5dnUilQaMt-2X-DZRfZPmQnzikom5h1pXysIono0w',
+            'THFi2alVD8V3n83TUhy5IXWJoZXN9QKZWH8NjK5DYEHQCUziMeG424BvnntyRSwsrCFBtvlVEcJc2g3akNjrsg',
+            'a0jKJ7wGYETe-n5xjhOK-nWJoZXN9QKZWH8NjK5DYEGO9a4neOVsmrjMyO4OkNUliCY0OnwVakSKkc1C2_c55g'],
+         'seq': 0,
+         'watermark': 1550245456341},
+      'recipient': {'id': '1368143226655403'},
+      'sender': {'id': '2231584683532589'},
+      'timestamp': 1550245460884}],
+   'time': 1550245460903}],
+'object': 'page'}

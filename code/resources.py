@@ -30,7 +30,6 @@ pattern_dictionary = {
 
 #Set of responses for particular intents:
 def responder(intent, user_message="", userid="", bot=""):
-
     switcher = {
         "greetings":   greetings,
         "yes":         yes,
@@ -63,8 +62,8 @@ def responder(intent, user_message="", userid="", bot=""):
         "bye":          bye
     }
     # Get the function from switcher dictionary
-    func = switcher.get(intent, lambda user_message, userid, bot : default_message)
-    # Execute the function
+    func = switcher.get(intent, default_message)
+    # previous version with bug: func = switcher.get(intent, lambda user_message, userid, bot : default_message)
     return func(user_message, userid, bot)
 
 def default_message(user_message, userid="", bot=""):
@@ -141,27 +140,29 @@ def sentiment(user_message, userid="", bot=""):
     return ["ehhh...","good old times."]
 
 def test_list_message(user_message, userid="", bot=""):
-    db.add_conversation(userid, 'User', user_message)
-    db.add_conversation(userid, 'Bot', '<sent list message>')
-    bot.fb_send_list_message(userid, ['a', 'b'], ['a', 'b']) #TODO not working
+    # db.add_conversation(userid, 'User', user_message)
+    # db.add_conversation(userid, 'Bot', '<sent list message>')
+    bot.fb_send_list_message(userid, ['test_value_1', 'test_value_2'], ['test_value_1', 'test_value_2']) #TODO not working
     return "already sent"
 
 def test_button_message(user_message, userid="", bot=""):
-    db.add_conversation(userid, 'User', user_message)
-    db.add_conversation(userid, 'Bot', '<sent button message>')
-    bot.fb_send_button_message(userid, "test", ['a', 'b']) #TODO not working
+    # db.add_conversation(userid, 'User', user_message)
+    # db.add_conversation(userid, 'Bot', '<sent button message>')
+    bot.fb_send_button_message(userid, "test", ['test_value_1', 'test_value_2']) #TODO not working
     return "already sent"
 
 def test_generic_message(user_message, userid="", bot=""):
-    db.add_conversation(userid, 'User', user_message)
-    db.add_conversation(userid, 'Bot', '<sent generic message>')
-    bot.fb_send_generic_message(userid, ['a', 'b']) #TODO not working
+    # db.add_conversation(userid, 'User', user_message)
+    # db.add_conversation(userid, 'Bot', '<sent generic message>')
+    # temp: bot.fb_send_test_message(userid, ['test_value_1', 'test_value_2'])
+    bot.fb_send_generic_message(userid, ['Test_value_1', 'Test_value_2'])
+    # bot.fb_send_generic_message(userid, [['Title1','Subtitle1','image_url1',buttons=['title1','url1']],['Title2','Subtitle2','image_url2',buttons=['title2','url2']]])
     return "already sent"
 
 def test_quick_replies(user_message, userid="", bot=""):
-    db.add_conversation(userid, 'User', user_message)
-    db.add_conversation(userid, 'Bot', '<sent quick replies message>')
-    bot.fb_send_quick_replies(userid, "This is a test of quick replies", ['a', 'b', 'c']) #TODO test if working
+    # db.add_conversation(userid, 'User', user_message)
+    # db.add_conversation(userid, 'Bot', '<sent quick replies message>')
+    bot.fb_send_quick_replies(userid, "This is a test of quick replies", ['test_value_1', 'test_value_2', 'test_value_3']) #TODO test if working
     return "already sent"
 
 def bye(user_message, userid="", bot=""):
