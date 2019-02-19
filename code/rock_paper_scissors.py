@@ -48,6 +48,7 @@ def play(user_message = "", userid="", bot=""):
         "scissors" :  [r'scissors', r'✌']
     }
     choice = bot_behaviour.regex_pattern_matcher(user_message, rps_pattern)
+
     if choice == "new_game":
         entry_message = random.choice(["Which one do you choose?", "so, rock, paper or scissors?", "ok, let's play!"])
         bot.fb_send_quick_replies(userid, entry_message, ["✊ rock","✋ paper","✌ scissors"])

@@ -248,8 +248,6 @@ class Bot:
             })
         return elements
 
-
-
     def fb_send_action(self, userid, action, notification_type=NotificationType.regular):
         """Send typing indicators or send read receipts to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/sender-actions
