@@ -1,0 +1,37 @@
+USR:  Hey/Siema/Rozpocznij
+BOT:  Cześć, jestem Bot i moja specjalnośc to znajdowanie ofert...
+      Czy szukasz lokalu do kupienia czy na wynajem?
+      QR: 'kupno' 'wynajem'
+USR:  ...
+BOT:  Ok, szukasz mieszkania, pokoju, czy domu?
+      QR:   'm' 'p' 'd'
+USR:  ...
+BOT:  Jakie miasto Cię interesuje?
+      QR: 'Warszawa' 'Kraków' 'Poznań'
+      jaka okolica?
+      'wyślij lokalizacje' / wpisuje dzielnicę/ulicę
+BOT:  znalazłem 123 ofert spełniających te kryteria. Średnia cen w tej okolicy to 1230zł/msc. Czy pokazać Ci kilka najlepszych moim zdaniem czy odpowiesz na jeszcze kilka pytań?
+      'pokaż' 'pytaj'
+BOT:  Ile maksymalnie chciałbyś płacić miesięcznie?
+      NLP
+
+
+
+
+
+
+
+
+
+
+TODO:
+- dodać Class Carusel (...która bierze też message, linki itp) i metode send_carusel()
+- indywidualne NLP
+- RPS
+- dodać Menu (ustawienia, hamburger) rozmowy (jak w Prisoner), żeby dało się np.
+   - cofnąć jedną wiadomość
+   - wyzerować wyszukiwanie
+- rozdzielić RPS game i REBOT
+- stabilizacja inputu :) (np. żeby Polska nie była polską, żeby trafił w listę)
+- przepraszam nie zrozumiałem, powtórz...
+-

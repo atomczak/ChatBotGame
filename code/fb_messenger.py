@@ -9,13 +9,31 @@ import requests
 from requests_toolbelt import MultipartEncoder
 from time import sleep
 import random
-from code import mongodb_connection as db
-# For token veryfication:
+from Responder_app import local_tokens, database, witai
+if local_tokens: from code import tokens_local as tokens
+else: from code import tokens
+if database: from code import mysql_connection as db
 import hashlib
 import hmac
 import six
+import pprint
+import logging
+log = logging.getLogger(os.path.basename(__file__))
+
+#TODO add a 'tag' NON_PROMOTIONAL_SUBSCRIPTION
+#TODO add a 'messaging_type' TYPE_MESSAGE_TYPE
+# https://developers.facebook.com/docs/messenger-platform/send-messages/message-tags
 
 DEFAULT_API_VERSION = 3.2   #2.6
+
+def verify_fb_token(request, token_sent):
+    """Take token sent by facebook and verify if it matches"""
+    if token_sent == tokens.fb_verification:
+        return request.args.get("hub.challenge")
+        log.info("FB token verification succesfull.")
+    else:
+        log.warning("Failed to verify FB token.")
+        return 'Invalid verification token'
 
 class NotificationType(Enum):
     regular = "REGULAR"
@@ -124,11 +142,12 @@ class Bot:
             Response from API as <dict>
         """
         if type(message) == list: message = random.choice(message)
+        #log.info("Bot's message ??? to {1}: {0}".format(message, str(userid)))
         return self.fb_send_message(userid, {
             'text': message
         }, notification_type)
 
-    def fb_send_generic_message(self, userid, element_titles=['a', 'b'], notification_type=NotificationType.regular):
+    def fb_send_generic_message(self, userid, elements_titles=['a', 'b'], buttons_titles=['b1', 'b2'], notification_type=NotificationType.regular):
         """Send generic messages to the specified recipient.
         https://developers.facebook.com/docs/messenger-platform/send-api-reference/generic-template
         Input:
@@ -137,7 +156,9 @@ class Bot:
         Output:
             Response from API as <dict>
         """
-        elements = self.fb_define_elements(element_titles)
+        log.debug("Trying to send generic message...")
+
+        elements = self.fb_define_elements(elements_titles, buttons_titles)
 
         return self.fb_send_message(userid, {
             "attachment": {
@@ -149,26 +170,80 @@ class Bot:
             }
         }, notification_type)
 
-    def fb_send_list_message(self, userid, element_titles=['a', 'b'], button_names=['a', 'b'], notification_type=NotificationType.regular):
-        """Send generic messages to the specified recipient.
-        https://developers.facebook.com/docs/messenger-platform/send-api-reference/generic-template
-        Input:
-            userid: recipient id to send to
-            element_titles: generic message elements to send
-        Output:
-            Response from API as <dict>
-        """
-        elements = self.fb_define_elements(element_titles)
-        buttons = self.fb_define_buttons(button_names)
+    # def fb_send_list_message(self, userid, element_titles=['a', 'b'], button_titles=['a', 'b'], notification_type=NotificationType.regular):
+    #     """Send generic messages to the specified recipient.
+    #     https://developers.facebook.com/docs/messenger-platform/send-api-reference/generic-template
+    #     Input:
+    #         userid: recipient id to send to
+    #         element_titles: generic message elements to send
+    #     Output:
+    #         Response from API as <dict>
+    #     """
+    #     log.debug("Trying to send list message.")
+    #
+    #     elements = self.fb_define_elements(element_titles, button_titles)
+    #     buttons = self.fb_define_buttons(button_titles)
+    #
+    #     return self.fb_send_message(userid, {
+    #         "attachment": {
+    #             "type": "template",
+    #             "payload": {
+    #                 "template_type": "list",
+    #                 "top_element_style": "large",
+    #                     "elements": elements,
+    #                     "buttons": buttons
+    #             }
+    #         }
+    #     }, notification_type)
+
+
+    def fb_send_list_message(self, userid, element_titles=['a', 'b'], button_titles=['a', 'b'], notification_type=NotificationType.regular):
+        """TEST"""
+        log.debug("Trying to send TEST list message.")
+
+        elements = self.fb_define_elements(element_titles, button_titles)
+        buttons = self.fb_define_buttons(button_titles)
 
         return self.fb_send_message(userid, {
             "attachment": {
                 "type": "template",
                 "payload": {
-                "template_type": "list",
-                "top_element_style": "large",
-                    "elements": elements,
-                    "buttons": buttons
+                    "template_type": "list",
+                    "top_element_style": "compact",
+                    "elements": [
+                        {
+                            "title": "Classic White T-Shirt",
+                            "subtitle": "See all our colors",
+                            "default_action": {
+                                "type": "web_url",
+                                "url": "https://peterssendreceiveapp.ngrok.io/view?item=100",
+                                #"messenger_extensions": "false",
+                                "webview_height_ratio": "tall"
+                            }
+                        },
+                        {
+                            "title": "Classic White T-Shirt 2",
+                            "subtitle": "See all our colors 2",
+                            "default_action": {
+                                "type": "web_url",
+                                "url": "https://peterssendreceiveapp.ngrok.io/view?item=100",
+                                #"messenger_extensions": "false",
+                                "webview_height_ratio": "tall"
+                            }
+                        }
+                    ],
+                     "buttons": [
+                        {
+                            "title": "post back!",
+                            "type": "postback",
+                            "payload": "payload"
+                        },
+                        {
+                            "title": "Button 2",
+                            "type": "postback",
+                            "payload": "payload"
+                        }
+                    ]
                 }
             }
         }, notification_type)
@@ -183,6 +258,7 @@ class Bot:
         Output:
             Response from API as <dict>
         """
+        log.debug("Trying to send button message.")
         buttons = self.fb_define_buttons(button_names)
 
         return self.fb_send_message(userid, {
@@ -200,23 +276,31 @@ class Bot:
         buttons = []
         for b in button_names:
             buttons.append({
-            "title": str(b),
-            "type": "web_url",
-            "url": "https://google.com",
-            "messenger_extensions": "true",
-            "webview_height_ratio": "tall",
-            "fallback_url": "https://google.com"
+                "title": str(b),
+                "type": "web_url",
+                #"type":"postback",
+                "url": "http://www.olx.com"
+                #"messenger_extensions": "true",
+                #"webview_height_ratio": "tall",
+                #"payload":"DEVELOPER_DEFINED_PAYLOAD"
+                #"fallback_url": "http://www.olx.com"
             })
         return buttons
 
-    def fb_define_elements(self, element_titles=['a', 'b'], buttons=[]):
+    def fb_define_elements(self, element_titles=['a', 'b'], buttons_titles=['c','d']):
         elements = []
+        buttons = self.fb_define_buttons(buttons_titles)
         for e in element_titles:
             elements.append({
             "title": str(e),
             "subtitle": "This is a subtitle",
-            "image_url": "https://www.snk-corp.co.jp/us/neogeomini/img/main/top_neomini.png",
+            "image_url": "http://www.gatewayapartments.com.hk/img/GatewayApartments.png",
             "buttons": buttons,
+            "default_action": {
+                "type": "web_url",
+                "url": "www.olx.com",
+                "webview_height_ratio": "tall",
+                }
             })
         return elements
 
@@ -410,6 +494,45 @@ class Bot:
         )
         result = response.json()
         return result
+
+    # def fb_create_menu(self):
+    #     request_endpoint = '{0}/me/messenger_profile?access_token='.format(self.graph_url)
+    #     response = requests.post(
+    #         request_endpoint,
+    #         params=self.auth_args,
+    #         json=payload
+    #     )
+    #     result = response.json()
+    #     return result
+    #
+    #
+    #          {
+    #       "persistent_menu":[
+    #         {
+    #           "locale":"default",
+    #           "composer_input_disabled": true,
+    #           "call_to_actions":[
+    #             {
+    #               "title":"My Account",
+    #               "type":"nested",
+    #               "call_to_actions":[
+    #                 {
+    #                   "title":"Pay Bill",
+    #                   "type":"postback",
+    #                   "payload":"PAYBILL_PAYLOAD"
+    #                 },
+    #                 {
+    #                   "type":"web_url",
+    #                   "title":"Latest News",
+    #                   "url":"https://www.messenger.com/",
+    #                   "webview_height_ratio":"full"
+    #                 }
+    #               ]
+    #             }
+    #           ]
+    #         }
+    #       ]
+    #     }
 
 def validate_hub_signature(app_secret, request_payload, hub_signature_header):
     """
