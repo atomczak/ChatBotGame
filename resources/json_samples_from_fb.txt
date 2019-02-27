@@ -57,6 +57,12 @@ _____ SAMPLE STICKER MESSAGE _________
    'time': 1550245814781}],
 'object': 'page'}
 
+_____ GIF MESSAGE  _________
+
+......
+
+
+
 _____ DELIVERY CONFIRMATION _________
 
 {'entry': [{
@@ -77,18 +83,4 @@ _____ DELIVERY CONFIRMATION _________
 
 _____ READ CONFIRMATION  _________
 
-{'entry': [{
-   'id': '1368143226655403',
-   'messaging': [{
-      'delivery': {
-         'mids': [
-            'fJo_skAtj0UAj5GgomOw53WJoZXN9QKZWH8NjK5DYEE9B5dnUilQaMt-2X-DZRfZPmQnzikom5h1pXysIono0w',
-            'THFi2alVD8V3n83TUhy5IXWJoZXN9QKZWH8NjK5DYEHQCUziMeG424BvnntyRSwsrCFBtvlVEcJc2g3akNjrsg',
-            'a0jKJ7wGYETe-n5xjhOK-nWJoZXN9QKZWH8NjK5DYEGO9a4neOVsmrjMyO4OkNUliCY0OnwVakSKkc1C2_c55g'],
-         'seq': 0,
-         'watermark': 1550245456341},
-      'recipient': {'id': '1368143226655403'},
-      'sender': {'id': '2231584683532589'},
-      'timestamp': 1550245460884}],
-   'time': 1550245460903}],
-'object': 'page'}
+......

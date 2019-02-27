@@ -1,6 +1,9 @@
 from mongoengine import *
 import datetime
 from code import tokens
+import logging
+import os
+log = logging.getLogger(os.path.basename(__file__))
 
 def setup_database_connection():
     """The function sets up the MongoDB database connection. Due to the public Github page, at the moment the
@@ -10,7 +13,7 @@ def setup_database_connection():
                                      tokens.db_address + '/' + tokens.db_database_name))
 
     #connectTimeoutMS=30000, socketTimeoutMS=None, socketKeepAlive=True, connect=False, maxPoolsize=1
-    print('[LOG-DB] Established connection to the database.')
+    log.info('[LOG-DB] Established connection to the database.')
 
 
 class Conversation(EmbeddedDocument):

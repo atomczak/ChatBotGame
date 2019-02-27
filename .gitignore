@@ -5,6 +5,7 @@
 /rest/
 /backups/
 /code/tokens.py
+/code/tokens_local.py
 /code/tokens
 /ignore_me
 /resources

@@ -5,8 +5,11 @@ It does not use NLP (yet).
 import random
 import json
 import sys
-sys.path.append('../code')
-from helpers import *
+sys.path.append('..')
+from code import bot_behaviour
+import logging
+import os
+log = logging.getLogger(os.path.basename(__file__))
 
 print("")
 print(" --- beginning of the new conversation (say 'bye' to exit) --- ")

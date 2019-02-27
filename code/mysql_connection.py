@@ -1,7 +1,12 @@
 import mysql.connector
 from mysql.connector import errorcode
-from code import tokens
+from Responder_app import local_tokens, database, witai
+if local_tokens: from code import tokens_local as tokens
+else: from code import tokens
 from signal import signal, SIGPIPE, SIG_DFL
+import logging
+import os
+log = logging.getLogger(os.path.basename(__file__))
 
 """Funtion definition"""
 
@@ -11,17 +16,17 @@ def create_database():
     try:
         cursor.execute("CREATE DATABASE {} ".format(DB_NAME))
     except mysql.connector.Error as err:
-        print("[LOG-DBSQL-ERROR] Failed creating database: {}".format(err))
+        log.error("Failed creating database: {}".format(err))
     try:
         cursor.execute("USE {}".format(DB_NAME))
     except mysql.connector.Error as err:
-        print("[LOG-DBSQL-INFO] Database {} does not exists.".format(DB_NAME))
+        log.info("Database {} does not exists.".format(DB_NAME))
         if err.errno == errorcode.ER_BAD_DB_ERROR:
             create_database()
-            print("[LOG-DBSQL-INFO] Database {} created successfully.".format(DB_NAME))
+            log.info("Database {} created successfully.".format(DB_NAME))
             cnx.database = DB_NAME
         else:
-            print('LOG-DBSQL-ERROR ' + str(err))
+            log.error(str(err))
     try:
         cursor.execute("""
         ALTER DATABASE
@@ -29,10 +34,9 @@ def create_database():
             CHARACTER SET = utf8mb4
             COLLATE = utf8mb4_unicode_ci
         """)
-        print ('[LOG-DBSQL-INFO] Changed UTF')
+        log.info('Changed UTF')
     except:
-        print('[LOG-DBSQL-INFO] Failed to changed= UTF')
-
+        log.error('Failed to change UTF')
 
 def connect_to_db(connection_config):
     global cursor
@@ -41,11 +45,11 @@ def connect_to_db(connection_config):
         cursor = cnx.cursor()
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            print("[LOG-DBSQL-ERROR] Something is wrong with your user name or password")
+            log.error("Something is wrong with your user name or password")
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            print("[LOG-DBSQL-ERROR] Database does not exist")
+            log.error("Database does not exist")
         else:
-            print(err)
+            log.error(str(err))
     else:
         return cnx
 
@@ -53,16 +57,16 @@ def create_tables():
     for table_name in db_tables:
         table_description = db_tables[table_name]
         try:
-            print("[LOG-DBSQL-INFO] Creating table {}: ".format(table_name), end='')
+            log.info("Creating table {0}".format(table_name))
             cursor.execute(table_description)
             try:
                 cursor.execute("""
                 ALTER TABLE %s
                 CONVERT TO CHARACTER SET utf8mb4
                 COLLATE utf8mb4_unicode_ci""" % (table_name))
-                print("[LOG-DBSQL-INFO] Table charset altering suceeded")
+                log.info("Table charset altering suceeded")
             except:
-                print("[LOG-DBSQL-DEBUG] Table charset altering failed")
+                log.error("Table charset altering failed")
             try:
                 cursor.execute("""
                 ALTER TABLE conversations
@@ -70,16 +74,16 @@ def create_tables():
                 VARCHAR(999)
                 CHARACTER SET utf8mb4
                 COLLATE utf8mb4_unicode_ci;""")
-                print("[LOG-DBSQL-INFO] Column charset altering suceeded")
+                log.info("Column charset altering suceeded")
             except:
-                print("[LOG-DBSQL-DEBUG] Column charset altering failed")
+                log.error("Column charset altering failed")
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
-                print("already exists.")
+                log.info("Table already exists")
             else:
-                print('[LOG-DBSQL-DEBUG] ' + str(err.msg))
+                log.error(str(err.msg))
         else:
-            print("OK")
+            log.info("OK")
 
 def create_player(facebook_id, first_name=None, last_name=None, gender=None):
     try:
@@ -93,13 +97,13 @@ def create_player(facebook_id, first_name=None, last_name=None, gender=None):
         data_player = (facebook_id, first_name, last_name, gender,times_played, times_won, times_drew, times_lost)
         cursor.execute(add_player, data_player)
         cnx.commit()
-        print ('[LOG-DBSQL-INFO] Added user {} using the following data: {}, {}, {}, {}, {}, {}, {}'.format(*data_player))
+        log.info('Added user {} using the following data: {}, {}, {}, {}, {}, {}, {}'.format(*data_player))
     except mysql.connector.IntegrityError as err:
-        print("[LOG-DBSQL-ERROR] Error: {}".format(err))
+        log.error(str(err))
 
 def add_conversation(facebook_id, who_said_it, message_content, message_timestamp=None, message_intent=None):
     """A function used to add a conversation to the specific player. """
-    print("[LOG-DBSQL-ERR] Didn't add the conversation - this code is dissabled.")
+    log.error("Didn't add the conversation - this code is dissabled.")
     # try:
     #     add_conversation = ("INSERT INTO conversations "
     #                       "(facebook_id, message_content, who_said_it, message_timestamp, message_intent) "
@@ -107,7 +111,7 @@ def add_conversation(facebook_id, who_said_it, message_content, message_timestam
     #     data_conversation = (facebook_id, message_content, who_said_it, message_timestamp, message_intent)
     #     cursor.execute(add_conversation, data_conversation)
     #     cnx.commit()
-    #     print('[LOG-DBSQL-INFO] Added conversation using the following data: {}, {}, {}, {}, {}'.format(*data_conversation))
+    #     log.info('[LOG-DBSQL-INFO] Added conversation using the following data: {}, {}, {}, {}, {}'.format(*data_conversation))
     # except:  #TODO -> FIX THIS EMOJI PROBLEM
     #     try:
     #         add_conversation = ("INSERT INTO conversations "
@@ -116,7 +120,7 @@ def add_conversation(facebook_id, who_said_it, message_content, message_timestam
     #         data_conversation = (facebook_id, 'unhandled emoji', who_said_it, message_timestamp, message_intent)
     #         cursor.execute(add_conversation, data_conversation)
     #         cnx.commit()
-    #         print('[LOG-DBSQL-INFO] Added conversation emoji using the following data: {}, {}, {}, {}, {}'.format(*data_conversation))
+    #         log.info('[LOG-DBSQL-INFO] Added conversation emoji using the following data: {}, {}, {}, {}, {}'.format(*data_conversation))
     #     except:
     #         raise Exception("""[LOG-DB] Function input data does not fit the assumptions. Please specify who_said_it field properly. Options are: 'Bot' or 'User'""")
 
