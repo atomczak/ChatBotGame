@@ -111,6 +111,7 @@ def handle_sticker(message, userid, bot):
     sticker_name = recognize_sticker(sticker_id)
     response = sticker_response(sticker_name)
     bot.fb_send_text_message(userid, response)
+    mid = "abcdefghijklmn"
     if database: db.add_conversation(userid,'User', '<sticker_{0}_{1}>'.format(sticker_name, str(sticker_id)))
     if database: db.add_conversation(userid,'Bot', response)
     log.info("Message {0} from {1} recognized as '{1}' sticker (id={2})".format(str(mid)[0:6], str(userid)[0:5], sticker_name, str(sticker_id)))
