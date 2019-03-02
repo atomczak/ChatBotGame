@@ -210,6 +210,4 @@ else:
     db_config = tokens.pythonanywhere_config
 
 """SETUP"""
-
-local_config = True
 set_up_db(db_config)
