@@ -36,7 +36,8 @@ def handle_messages(user_message):
             userid = message['sender']['id']   #sender, thus our recipient id
             if message.get('delivery'):
                 deli = message['delivery']
-                mid = deli.get('mid')
+                #mid = deli.get('mid')
+                mid = "abcdefghijklmn"
                 if int(message['recipient']['id']) == int(tokens.fb_bot_id):
                     log.info("Message {0} from {1} delivered".format(str(mid)[0:6], str(userid[0:5])))
                 else:
