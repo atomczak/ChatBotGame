@@ -21,12 +21,11 @@ log = logging.getLogger(os.path.basename(__file__))
 logging.basicConfig(level=logging.INFO,    #levels in order: DEBUG, INFO, WARNING, EXCEPTION, ERROR, CRITICAL
                     #filename='/folder/myapp.log',
                     #filemode='w',
-                    format='%(asctime)s %(levelname)s (%(name)s): %(message)s',    #%()-5s adds space if less then 5 letters
+                    format='%(asctime)s %(levelname)s from %(name)s: %(message)s',    #%()-5s adds space if less then 5 letters
                     datefmt='%Y.%m.%d %H:%M:%S')
 
 #initiate the web app
 app = Flask(__name__)
-log.info("Main app has been restarted. New Flask app initialized (local_tokens: "+str(local_tokens)+", database: "+str(database)+", witai: "+str(witai)+").")
 
 #We will receive messages that Facebook sends to our bot at this endpoint:
 @app.route("/", methods=['GET', 'POST'])
@@ -43,4 +42,5 @@ def receive_message():
 
 #If the program is executed (double-clicked), it will set name to main, thus run app:
 if __name__ == "__main__":
+    log.info("Main app has been restarted. New Flask app initialized (local_tokens: "+str(local_tokens)+", database: "+str(database)+", witai: "+str(witai)+").")
     app.run()

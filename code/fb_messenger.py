@@ -217,7 +217,8 @@ class Bot:
                             "default_action": {
                                 "type": "web_url",
                                 "url": "https://peterssendreceiveapp.ngrok.io/view?item=100",
-                                #"messenger_extensions": "false",
+                                # "messenger_extensions": "false",
+                                "messenger_extensions": False,
                                 "webview_height_ratio": "tall"
                             }
                         },
@@ -227,7 +228,8 @@ class Bot:
                             "default_action": {
                                 "type": "web_url",
                                 "url": "https://peterssendreceiveapp.ngrok.io/view?item=100",
-                                #"messenger_extensions": "false",
+                                # "messenger_extensions": "false",
+                                "messenger_extensions": False,
                                 "webview_height_ratio": "tall"
                             }
                         }

@@ -31,47 +31,64 @@ def handle_messages(user_message):
     """ Recognize the content and respond accordingly. """
     for entry in user_message['entry']:
         message_id = entry['id']
-        messaging = entry['messaging']
-        for message in messaging:
-            userid = message['sender']['id']   #sender, thus our recipient id
-            if message.get('delivery'):
-                deli = message['delivery']
-                #mid = deli.get('mid')
-                mid = "abcdefghijklmn"
-                if int(message['recipient']['id']) == int(tokens.fb_bot_id):
-                    log.info("Message {0} from {1} delivered".format(str(mid)[0:6], str(userid[0:5])))
+        try:
+            messaging = entry['messaging']
+        except:
+            messaging = False
+            log.warning("This wasn't a message, perhaps it's an info request. Content:  \n"+str(user_message))
+
+        if messaging != False:
+
+            for message in messaging:
+                senderid = message['sender']['id']   #sender, thus our recipient id
+                recipientid = message['recipient']['id']
+                if message.get('delivery'):
+                    deli = message['delivery']
+                    try:
+                        mids = deli.get('mids')
+                    except:
+                        mids = "DELIXXXXXXXXXXXXXX"
+                    if int(recipientid) == int(tokens.fb_bot_id):
+                        mid=""
+                        for m in mids:
+                            mid += ",'"+str(m)[0:7]+"'"
+                        mid = mid[1:]
+                        log.info("Bot's messages: {0} delivered to {1}.".format(mid, str(senderid[0:5])))
+                    else:
+                        log.info("Message {0} from {1} has been delivered.".format(str(mid)[0:7], str(senderid[0:5])))
+                elif message.get('read'):
+                    if int(message['recipient']['id']) == int(tokens.fb_bot_id):
+                        log.info("Bot's message read by {0}.".format(senderid[0:5]))
+                    else:
+                        log.info("Message from {0} read by bot.".format(str(senderid[0:5])))
+                elif message.get('message'):
+                    bot.fb_send_action(senderid, 'mark_seen')
+                    add_new_user(senderid)
+                    message = message['message']
+                    user_message = message.get('text')
+                    try:
+                        mid = message.get('mid')
+                    except:
+                        mid = "TEXTXXXXXXXXXXXXXX"
+                    if int(senderid) != int(tokens.fb_bot_id):
+                        if message.get('text'):
+                            log.info("Message '{0}' from user {1}:  '{2}'".format(str(mid)[0:7], str(senderid)[0:5], user_message))
+                            handle_text(message, senderid, bot)
+                        elif message.get('sticker_id'):
+                            log.info("Message '{0}' from user {1}:  '<sticker id={2}>'".format(str(mid)[0:7], str(senderid)[0:5], str(message.get('sticker_id')) ))
+                            handle_sticker(message, senderid, bot)
+                        elif message.get('attachments'):
+                            log.info("Message '{0}' from user {1}:  '<GIF link={2}>'".format(str(mid)[0:7], str(senderid)[0:5], str(message.get('url')) ))
+                            handle_attachment(message, senderid, bot)
+                    else:
+                        if message.get('text'):
+                            log.info("Bot's message '{0}' to user {1}:  '{2}'".format(str(mid)[0:7], recipientid[0:5], user_message))
+                        elif message.get('sticker_id'):
+                            log.info("Bot's message '{0}' to user {1}:  '<sticker id={2}>'".format(str(mid)[0:7], str(senderid)[0:5], str(message.get('sticker_id')) ))
+                        elif message.get('attachments'):
+                            log.info("Bot's message '{0}' to user {1}:  '<GIF link={2}>'".format(str(mid)[0:7], str(senderid)[0:5], str(message.get('url')) ))
                 else:
-                    log.info("Message {0} delivered to {1}".format(str(mid)[0:6], str(message['recipient']['id'][0:5])))
-            elif message.get('read'):
-                if int(message['recipient']['id']) == int(tokens.fb_bot_id):
-                    log.info("Message from {0} read by bot".format(str(userid[0:5])))
-                else:
-                    log.info("Message from bot read by {1}".format(message['recipient']['id'][0:5]))
-            elif message.get('message'):
-                bot.fb_send_action(userid, 'mark_seen')
-                add_new_user(userid)
-                message = message['message']
-                user_message = message.get('text')
-                mid = message.get('mid')
-                if int(userid) != int(tokens.fb_bot_id):
-                    if message.get('text'):
-                        log.info("Message {0} from {1}:\n{2}USER: {3}".format(str(mid)[0:6], str(userid)[0:5], 20*" ", user_message))
-                        handle_text(message, userid, bot)
-                    elif message.get('sticker_id'):
-                        log.info("Message {0} from {1}:\n{2}USER: <sticker id={3}>".format(str(mid)[0:6], str(userid)[0:5], 20*" ", str(message.get('sticker_id')) ))
-                        handle_sticker(message, userid, bot)
-                    elif message.get('attachments'):
-                        log.info("Message {0} from {1}:\n{2}USER: <GIF link={3}>".format(str(mid)[0:6], str(userid)[0:5], 20*" ", str(message.get('url')) ))
-                        handle_attachment(message, userid, bot)
-                else:
-                    if message.get('text'):
-                        log.info("Bot's message {0} to {1}:\n{2}BOT:  {3}".format(str(mid)[0:6], str(userid)[0:5], 20*" ", user_message))
-                    elif message.get('sticker_id'):
-                        log.info("Bot's message {0} to {1}:\n{2}BOT:  <sticker id={3}>".format(str(mid)[0:6], str(userid)[0:5], 20*" ", str(message.get('sticker_id')) ))
-                    elif message.get('attachments'):
-                        log.info("Bot's message {0} to {1}:\n{2}BOT:  <GIF link={3}>".format(str(mid)[0:6], str(userid)[0:5], 20*" ", str(message.get('url')) ))
-            else:
-                log.error("Unknown message type! Content: " + message)
+                    log.error("Unknown message type! Content: " + message)
 
 def add_new_user(user_id):
     """ Check if already exists. If not - add to database. """
@@ -81,19 +98,21 @@ def add_new_user(user_id):
         users.append(user_id)
     else:
         #TODO withdraw more info from the database.
-        #if database: db.query(user_id, (first_name,))
-        pass
+        if database: db.query(user_id, (first_name,last_name))
 
 def handle_text(message, userid, bot):
     """ React when the user sends any text. """
     entity = best_entity(message)
     user_message = message.get('text')
-    mid = message.get('mid')
+    try:
+        mid = message.get('mid')
+    except:
+        mid = "RECOGNITIONXXXXXXXXXXXXXX"
     if entity == "" or entity is None:
         entity = regex_pattern_matcher(user_message)   #no entity from NLP so try to find with regex
-        log.info("Message {0} from {1} recognized as {2} using REGEX".format(str(mid)[0:6], str(userid)[0:5], entity))
+        log.info("Message '{0}' from {1} recognized as {2} using REGEX.".format(str(mid)[0:7], str(userid)[0:5], entity))
     else:
-        log.info("Message {0} from {1} recognized as {2}={3} using NLP from FB".format(str(mid)[0:6], str(userid)[0:5], entity[0], str(entity[1])[0:5]))
+        log.info("Message '{0}' from {1} recognized as {2} ({3}% confidence) using NLP from FB.".format(str(mid)[0:7], str(userid)[0:5], entity[0], str(float(entity[1])*100)[0:5]))
         entity = entity[0]
     # React:
     response = responder(entity, user_message, userid, bot)   #prepare the response based on the entity given
@@ -111,11 +130,14 @@ def handle_sticker(message, userid, bot):
     sticker_name = recognize_sticker(sticker_id)
     response = sticker_response(sticker_name)
     bot.fb_send_text_message(userid, response)
-    mid = "abcdefghijklmn"
+    try:
+        mid = message.get('mid')
+    except:
+        mid = "STICKERXXXXXXXXXXXXXX"
     if database: db.add_conversation(userid,'User', '<sticker_{0}_{1}>'.format(sticker_name, str(sticker_id)))
     if database: db.add_conversation(userid,'Bot', response)
-    log.info("Message {0} from {1} recognized as '{1}' sticker (id={2})".format(str(mid)[0:6], str(userid)[0:5], sticker_name, str(sticker_id)))
-    log.info("Bot answer to {1}: '{0}'".format(response, str(userid)))
+    log.info("Message '{0}' from {1} recognized as '{1}' sticker (id={2})".format(str(mid)[0:7], str(userid)[0:5], sticker_name, str(sticker_id)))
+    log.info("Bot's response to user {1} sticker:  '{0}'".format(response, str(userid)))
 
 def handle_attachment(message, userid, bot):
     """ React when the user sends a GIF, photos, videos, or any other non-text item."""
@@ -123,9 +145,13 @@ def handle_attachment(message, userid, bot):
     image_url = r'https://media.giphy.com/media/L7ONYIPYXyc8/giphy.gif'
     bot.fb_send_image_url(userid, image_url)
     #or from local file: #bot.fb_send_image(userid, r'..\resources\CogitoErgoSum.jpg')
+    try:
+        mid = message.get('mid')
+    except:
+        mid = "GIFXXXXXXXXXXXXXX"
     if database: db.add_conversation(userid,'User','<GIF>')
     if database: db.add_conversation(userid, 'Bot', "<GIF>")
-    log.info("Bot: '{0}' [To: #{1}]".format('<GIF>', str(userid)))
+    log.info("Bot's response to user {1} gif:  '{0}'".format('<GIF>', str(userid)))
 
 def regex_pattern_matcher(str, pat_dic=pattern_dictionary):
     """Regular Expression pattern finder that searches for intents from patternDictionary."""
