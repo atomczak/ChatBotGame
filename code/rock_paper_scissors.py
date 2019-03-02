@@ -14,7 +14,7 @@ def play_a_round(userid, user_choice):
     winner bot -> 0; winner player -> 1; draw =-> None"""
     choices = ['rock', 'paper', 'scissors']
     bot_choice = random.choice(choices)
-    log.info("[LOG-GAME-INFO] User chose: " + user_choice + " Bot chose: " + bot_choice)
+    log.info("User chose: '" + user_choice + "', Bot chose: '" + bot_choice + "'")
     game_outcome = -1
     # establish game outcome
     if user_choice == bot_choice:
@@ -45,20 +45,21 @@ def play_a_round(userid, user_choice):
 
 def play(user_message = "", userid="", bot=""):
     rps_pattern = {
-        "new_game" : [r'start', r'play', r'game', r'rock ?paper ?scissors'],
+        "new_game" : [r'start', r'play', r'game'],
         "rock" :  [r'rock', r'✊'],
         "paper" :  [r'paper', r'✋'],
         "scissors" :  [r'scissors', r'✌']
     }
-    choice = bot_behaviour.regex_pattern_matcher(user_message, rps_pattern)
+    choice = bot_behaviour.regex_pattern_matcher(user_message, pat_dic=rps_pattern)
+    log.info(choice)
 
     if choice == "new_game":
         entry_message = random.choice(["Which one do you choose?", "so, rock, paper or scissors?", "ok, let's play!"])
         bot.fb_send_quick_replies(userid, entry_message, ["✊ rock","✋ paper","✌ scissors"])
-        log.info("[LOG-GAME-INFO] User #{0} started a new RPS game with: '{1}'.".format(str(userid)[0:4], str(user_message)))
+        log.info("User #{0} started a new RPS game with: '{1}'.".format(str(userid)[0:4], str(user_message)))
         return "Game started"
     elif choice == "rock" or choice == "paper" or choice == "scissors":
-        log.info("[LOG-GAME-INFO] User has choosen: "+str(choice))
+        log.info("User chose: "+str(choice))
         game_outcome = play_a_round(userid, choice)
         if game_outcome[0] == -1:
             response = random.choice(["Uff! It's a draw!", "Tie!"])
@@ -72,6 +73,10 @@ def play(user_message = "", userid="", bot=""):
         #db.add_conversation(userid, 'Bot', game_outcome[1])
         sleep(0.2)
         bot.fb_send_text_message(userid, str(response))
+        sleep(0.4)
+
+        bot.fb_send_quick_replies(userid, "Another round?", ["✊ rock","✋ paper","✌ scissors"])
+
         #db.add_conversation(userid, 'Bot', str(response))
         return "Game played"
     else:

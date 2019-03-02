@@ -38,32 +38,31 @@ def handle_messages(user_message):
             log.warning("This wasn't a message, perhaps it's an info request. Content:  \n"+str(user_message))
 
         if messaging != False:
-
             for message in messaging:
-                senderid = message['sender']['id']   #sender, thus our recipient id
-                recipientid = message['recipient']['id']
                 if message.get('delivery'):
                     deli = message['delivery']
                     try:
                         mids = deli.get('mids')
                     except:
                         mids = "DELIXXXXXXXXXXXXXX"
-                    if int(recipientid) == int(tokens.fb_bot_id):
+                    if int(message['recipient']['id']) == int(tokens.fb_bot_id):
                         mid=""
                         for m in mids:
                             mid += ",'"+str(m)[0:7]+"'"
                         mid = mid[1:]
-                        log.info("Bot's messages: {0} delivered to {1}.".format(mid, str(senderid[0:5])))
+                        log.info("Bot's message: {0} to {1} has been delivered.".format(mid, str(message['sender']['id'][0:5])))
                     else:
-                        log.info("Message {0} from {1} has been delivered.".format(str(mid)[0:7], str(senderid[0:5])))
+                        log.info("Message {0} from {1} has been delivered.".format(str(mid)[0:7], str(message['sender']['id'][0:5])))
                 elif message.get('read'):
                     if int(message['recipient']['id']) == int(tokens.fb_bot_id):
-                        log.info("Bot's message read by {0}.".format(senderid[0:5]))
+                        log.info("Bot's message read by {0}.".format(message['sender']['id'][0:5]))
                     else:
-                        log.info("Message from {0} read by bot.".format(str(senderid[0:5])))
+                        log.info("Message from {0} read by bot.".format(str(message['sender']['id'][0:5])))
                 elif message.get('message'):
-                    bot.fb_send_action(senderid, 'mark_seen')
-                    add_new_user(senderid)
+                    bot.fb_send_action(message['sender']['id'], 'mark_seen')
+                    add_new_user(message['sender']['id'])
+                    senderid = message['sender']['id']
+                    recipientid = message['recipient']['id']
                     message = message['message']
                     user_message = message.get('text')
                     try:
@@ -110,9 +109,9 @@ def handle_text(message, userid, bot):
         mid = "RECOGNITIONXXXXXXXXXXXXXX"
     if entity == "" or entity is None:
         entity = regex_pattern_matcher(user_message)   #no entity from NLP so try to find with regex
-        log.info("Message '{0}' from {1} recognized as {2} using REGEX.".format(str(mid)[0:7], str(userid)[0:5], entity))
+        log.info("Message '{0}' from {1} recognized as '{2}' using REGEX.".format(str(mid)[0:7], str(userid)[0:5], entity))
     else:
-        log.info("Message '{0}' from {1} recognized as {2} ({3}% confidence) using NLP from FB.".format(str(mid)[0:7], str(userid)[0:5], entity[0], str(float(entity[1])*100)[0:5]))
+        log.info("Message '{0}' from {1} recognized as '{2}' ({3}% confidence) using NLP from FB.".format(str(mid)[0:7], str(userid)[0:5], entity[0], str(float(entity[1])*100)[0:5]))
         entity = entity[0]
     # React:
     response = responder(entity, user_message, userid, bot)   #prepare the response based on the entity given
@@ -156,18 +155,22 @@ def handle_attachment(message, userid, bot):
 def regex_pattern_matcher(str, pat_dic=pattern_dictionary):
     """Regular Expression pattern finder that searches for intents from patternDictionary."""
     intent = False
-    search_object = False
     for key, value in pat_dic.items():
+        search_object = False
         if type(value) == list:
             for v in value:
                 s = re.search(v, str, re.M|re.I|re.U)    #|re.U
-                if s: search_object = s
+                if s != None:
+                    search_object = s
         else:
             search_object = re.search(value, str, re.M|re.I|re.U)    #|re.U
-        if search_object: intent = key   #cause found searchObj.group()
+
+        if search_object:
+            intent = key   #cause found searchObj.group()
+
     return intent
 
-def best_entity(message, minimum=0.85):
+def best_entity(message, minimum=0.90):
     """ Return best matching entity from NLP or None. """
     try:
         entities = list(message.get('nlp').get('entities').keys())
