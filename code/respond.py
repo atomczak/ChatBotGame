@@ -8,12 +8,13 @@ import logging
 import os
 log = logging.getLogger(os.path.basename(__file__))
 if database: from code import mysql_connection as db
+from time import sleep
 
 #Set of intents and patterns to recognize them:
 pattern_dictionary = {
         'greetings': [r'\b(hi|h[ea]+l+?o|h[ea]+[yj]+|yo+|welcome|(good)?\s?(morning?|evenin?)|hola|howdy|shalom|salam|czesc|witaj|siemk?a|marhaba|salut)\b'],
         #'greetings': [r'\b(hi|h[ea]+l+?o|h[ea]+[yj]+|yo+|welcome|(good)?\s?(morning?|evenin?)|hola|howdy|shalom|salam|czesc|witaj|siemk?a|marhaba|salut)\b', r'(\🖐|\🖖|\👋|\🤙)'],     #🖐🏻,🖖🏻,👋🏻,🤙🏻,🖐🏼,🖖🏼,👋🏼,🤙🏼,🖐🏽,🖖🏽,👋🏽,🤙🏽,🖐🏾,🖖🏾,👋🏾,🤙🏾,🖐🏿,🖖🏿,👋🏿,🤙🏿
-        'yes': r'\b(yes|si|ok|kk|ok[ae]y|confirm|good)\b',
+        'yes': r'\b(yes|si|ok|kk|ok[ae]y|su+re|affirmative|confirm|good)\b',
         #'yes': [r'\b(yes|si|ok|kk|ok[ae]y|confirm)\b',r'(\✔️|\☑️|\👍|\👌)'],    #👍🏻,👌🏻,👍🏼,👌🏼,👍🏽,👌🏽,👍🏾,👌🏾,👍🏿,👌🏿
         'no': r'\b(n+o+|decline|negative|n+o+pe)\b',
         #'no': [r'\b(n+o+|decline|negative|n+o+pe)\b', r'\👎'],    #👎🏻,👎🏼,👎🏽,👎🏾,👎🏿
@@ -72,41 +73,66 @@ def responder(intent, user_message="", userid="", bot=""):
     return func(user_message, userid, bot)
 
 def default_message(user_message, userid="", bot=""):
-    return ["No idea what you mean by that.","huh?","I don't get it","pardon me?"]
+    return ["Please rephrase it.",
+            "Sorry, I have no idea what you mean by that.",
+            "Excuse me?",
+            "Sorry, I don't get it",
+            "pardon me?"]
 
 def greetings(user_message, userid="", bot=""):
-    return "{0}! How are you doing?".format(user_message.split(' ', 1)[0].capitalize())
+    return ["{0}! How are you doing? Do you want to play Rock Paper Scissors?".format(user_message.split(' ', 1)[0].capitalize()),
+            "{0}! What's up? Wanna play Rock Paper Scissors?".format(user_message.split(' ', 1)[0].capitalize())]
 
 def yes(user_message, userid="", bot=""):
-    return ["You confirm, good","great","perfect","good","(y)"]
+    rps.play("new game", userid, bot)
+    return "already sent"
 
 def no(user_message, userid="", bot=""):
-    return [":(","nooo","why not?","Nobody says no to me!"]
+    return [":(",
+            "nooo",
+            "why not?",
+            "Nobody says no to me!"]
 
 def maybe(user_message, userid="", bot=""):
     return "'{0}'? You should be sure by now.".format(user_message.capitalize())
 
 def curse(user_message, userid="", bot=""):
-    return ["you {0}".format(user_message, userid="", bot=""),"not nice","Calm down!","same for you","yeah? you too"]
+    return ["{0}***? bad boy...".format(user_message[0:2], userid="", bot=""),
+            "not nice",
+            "Calm down!",
+            "same for you :P",
+            "yeah? you too"]
 
 def rpsgame(user_message, userid="", bot=""):
     rps.play(user_message, userid, bot)
     return "already sent"
 
 def uname(user_message, userid="", bot=""):
-    return ["My name is Khan 😎","chicka-chicka Slim Shady 😎","👽","🤖","they call me the man with no name"]
+    return ["My name is Khan 😎",
+            "chicka-chicka Slim Shady 😎",
+            "👽",
+            "🤖",
+            "they call me the man with no name"]
 
 def ureal(user_message, userid="", bot=""):
     return ["Cogito Ergo Sum","What is real?"]
 
 def secret(user_message, userid="", bot=""):
-    return ["😈","😎","💩","🤠","💀","👽","🤖","🙈🙉🙊"]
+    return ["😈",
+            "😎",
+            "💩",
+            "🤠",
+            "💀",
+            "👽",
+            "🤖",
+            "🙈🙉🙊"]
 
 def love(user_message, userid="", bot=""):
     return "I love you too {0}{1}{2}!".format(random.choice(["❤️","🧡","💛","💚","💙","💜","🖤"]),random.choice(["❤️","🧡","💛","💚","💙","💜","🖤"]),random.choice(["❤️","🧡","💛","💚","💙","💜","🖤"]))
 
 def thanks(user_message, userid="", bot=""):
-    return ["No problem","My pleasure!"]
+    return ["No problem",
+            "My pleasure!"]
 
 def datetime(user_message, userid="", bot=""):
     return "Let me check in my calendar..."
@@ -118,7 +144,7 @@ def phone(user_message, userid="", bot=""):
     return "My 📞 is 123-123-123 ☎️"
 
 def email(user_message, userid="", bot=""):
-    return "Email, how oldschool is that."
+    return "I don't have any email"
 
 def distance(user_message, userid="", bot=""):
     return "it's not that far 🚗"
@@ -127,7 +153,7 @@ def quantity(user_message, userid="", bot=""):
     return "ok, that's a lot."
 
 def temperature(user_message, userid="", bot=""):
-    return "brrrr ⛄️"
+    return "been to colder places ⛄️"
 
 def volume(user_message, userid="", bot=""):
     return "I can handle it."
@@ -139,10 +165,13 @@ def duration(user_message, userid="", bot=""):
     return "I got plenty of time ⌚️"
 
 def url(user_message, userid="", bot=""):
-    return ["you mind if I don't open that?","cool link, what's that?","you want me to open it"]
+    return ["you mind if I don't open that?",
+            "cool link, what's that?",
+            "you want me to open it"]
 
 def sentiment(user_message, userid="", bot=""):
-    return ["ehhh...","good old times."]
+    return ["ehhh...",
+            "good old times."]
 
 def test_list_message(user_message, userid="", bot=""):
     if database: db.add_conversation(userid, 'User', user_message)
@@ -196,22 +225,24 @@ def recognize_sticker(sticker_id):
     else:  sticker_name = 'unknown'
     return sticker_name
 
-def sticker_response(sticker_name):
-    return [{
-        'thumb' : "I take that blue thumb as yes.",
-        'thumb+' : "ho, what a big thumb!",
-        'thumb++' : "That is a big thumb.",
-        'cactus' : "Does this cactus have a second meaning? :)",
-        'dogo' : "Cute dog :)",
-        'dogo_great' : "I know it's great, that's what I do!",
-        'bird' : "I don't like birds, including doves",
-        'cat' : "Miauuuu :)",
-        'monkey' : "🙈 🙉 🙊",
-        'emoji' : "Thats a big emoji",
-        'turtle' : "It reminds me of my turtle... R.I.P",
-        'office' : "hehe, office stickers from the 90s are so old-school",
-        'chicken' : "koko?",
-        'fox' : "what does the fox say?!",
-        'kungfurry' : "Kung fury! 👊👊👊",
-        'sloth' : "cute sloth"
-     }.get(sticker_name, ["Cool sticker.", "I don't know how to relate to that sticker"]), sticker_name]
+def sticker_response(sticker_name, userid, bot):
+    if sticker_name == 'thumb' or sticker_name == 'thumb+' or sticker_name == 'thumb++':
+        bot.fb_send_text_message(userid, "I take this thumb as yes")
+        yes("new game", userid, bot)
+        return "already sent"
+    else:
+        return [{
+            'cactus' : "Does this cactus have a second meaning? :)",
+            'dogo' : "Cute dog :)",
+            'dogo_great' : "I know it's great, that's what I do!",
+            'bird' : "I don't like birds, including doves",
+            'cat' : "Miauuuu :)",
+            'monkey' : "🙈 🙉 🙊",
+            'emoji' : "Thats a big emoji",
+            'turtle' : "It reminds me of my turtle... R.I.P",
+            'office' : "hehe, office stickers from the 90s are so old-school",
+            'chicken' : "koko?",
+            'fox' : "what does the fox say?!",
+            'kungfurry' : "Kung fury! 👊👊👊",
+            'sloth' : "cute sloth"
+         }.get(sticker_name, ["Cool sticker.", "I don't know how to relate to that sticker"]), sticker_name]

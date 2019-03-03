@@ -12,24 +12,24 @@ def play_a_round(userid, user_choice):
     """Function that plays a round of rock - paper - scissors.
     Accepted arguments: 'rock', 'paper', 'scissors'
     winner bot -> 0; winner player -> 1; draw =-> None"""
-    choices = ['rock', 'paper', 'scissors']
+    choices = ['✊ rock', '✋ paper', '✌ scissors']
     bot_choice = random.choice(choices)
     log.info("User chose: '" + user_choice + "', Bot chose: '" + bot_choice + "'")
     game_outcome = -1
     # establish game outcome
     if user_choice == bot_choice:
         game_outcome = -1
-    elif user_choice == 'rock':
+    elif user_choice == '✊ rock':
         if bot_choice == 'paper':
             game_outcome = 0
         else:
             game_outcome = 1
-    elif user_choice == 'paper':
+    elif user_choice == '✋ paper':
         if bot_choice == 'scissors':
             game_outcome = 0
         else:
             game_outcome = 1
-    elif user_choice == 'scissors':
+    elif user_choice == '✌ scissors':
         if bot_choice == 'rock':
             game_outcome = 0
         else:
@@ -46,30 +46,30 @@ def play_a_round(userid, user_choice):
 def play(user_message = "", userid="", bot=""):
     rps_pattern = {
         "new_game" : [r'start', r'play', r'game'],
-        "rock" :  [r'rock', r'✊'],
-        "paper" :  [r'paper', r'✋'],
-        "scissors" :  [r'scissors', r'✌']
+        "✊ rock" :  [r'rock', r'✊ rock', r'✊'],
+        "✋ paper" :  [r'paper', r'✋ paper', r'✋'],
+        "✌ scissors" :  [r'scissors', r'✌ scissors', r'✌']
     }
     choice = bot_behaviour.regex_pattern_matcher(user_message, pat_dic=rps_pattern)
     log.info(choice)
     if database: db.add_conversation(userid, 'User', choice)
 
     if choice == "new_game":
-        entry_message = random.choice(["Which one do you choose?", "so, rock, paper or scissors?", "ok, let's play!"])
+        entry_message = random.choice(["Which one do you choose?", "so, rock, paper or scissors?", "ok, let's play! what do you choose?"])
         bot.fb_send_quick_replies(userid, entry_message, ["✊ rock","✋ paper","✌ scissors"])
         if database:
             db.add_conversation(userid, 'Bot', entry_message)
         log.info("User #{0} started a new RPS game with: '{1}'.".format(str(userid)[0:4], str(user_message)))
         return "Game started"
-    elif choice == "rock" or choice == "paper" or choice == "scissors":
+    elif choice == "✊ rock" or choice == "✊ paper" or choice == "✌ scissors":
         log.info("User chose: "+str(choice))
         game_outcome = play_a_round(userid, choice)
         if game_outcome[0] == -1:
-            response = random.choice(["Uff! It's a draw!", "Tie!"])
+            response = random.choice(["Uff! It's a draw!","Tie!"])
         elif game_outcome[0] == 0:
-            response = random.choice(["Hah! I won!", "I'm just lucky :)"])
+            response = random.choice(["Hah! I won!","Got ya!","I'm just lucky :)"])
         elif game_outcome[0] == 1:
-            response = random.choice(["Damm! I lost!", "You win!"])
+            response = random.choice(["Good one!","You beat me!","Congrats!","Damm! I lost!", "You win!"])
         else:
             response = "I can't play this game."
         bot.fb_send_text_message(userid, game_outcome[1])

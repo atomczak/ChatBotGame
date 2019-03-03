@@ -231,4 +231,4 @@ if local_config:
 else:
     db_config = tokens.pythonanywhere_config
 
-set_up_db(db_config)
+if database: set_up_db(db_config)

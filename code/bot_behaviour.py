@@ -44,7 +44,7 @@ def handle_messages(user_message):
                     try:
                         mids = deli.get('mids')
                     except:
-                        mids = "DELIXXXXXXXXXXXXXX"
+                        mids = "DELI-MID"
                     if int(message['recipient']['id']) == int(tokens.fb_bot_id):
                         mid=""
                         for m in mids:
@@ -68,7 +68,7 @@ def handle_messages(user_message):
                     try:
                         mid = message.get('mid')
                     except:
-                        mid = "TEXTXXXXXXXXXXXXXX"
+                        mid = "TEXT-MID"
                     if int(senderid) != int(tokens.fb_bot_id):
                         if message.get('text'):
                             log.info("Message '{0}' from user {1}:  '{2}'".format(str(mid)[0:7], str(senderid)[0:5], user_message))
@@ -106,7 +106,7 @@ def handle_text(message, userid, bot):
     try:
         mid = message.get('mid')
     except:
-        mid = "RECOGNITIONXXXXXXXXXXXXXX"
+        mid = "RECOGNITION-MID"
     if entity == "" or entity is None:
         entity = regex_pattern_matcher(user_message)   #no entity from NLP so try to find with regex
         log.info("Message '{0}' from {1} recognized as '{2}' using REGEX.".format(str(mid)[0:7], str(userid)[0:5], entity))
@@ -127,12 +127,13 @@ def handle_sticker(message, userid, bot):
     bot.fb_fake_typing(userid, 0.5)
     sticker_id = str(message.get('sticker_id'))
     sticker_name = recognize_sticker(sticker_id)
-    response = sticker_response(sticker_name)
-    bot.fb_send_text_message(userid, response)
+    response = sticker_response(sticker_name, userid, bot)
+    if response != "already sent":
+        bot.fb_send_text_message(userid, response)
     try:
         mid = message.get('mid')
     except:
-        mid = "STICKERXXXXXXXXXXXXXX"
+        mid = "STICKER-MID"
     if database: db.add_conversation(userid,'User', '<sticker_{0}_{1}>'.format(sticker_name, str(sticker_id)))
     if database: db.add_conversation(userid,'Bot', response)
     log.info("Message '{0}' from {1} recognized as '{1}' sticker (id={2})".format(str(mid)[0:7], str(userid)[0:5], sticker_name, str(sticker_id)))
@@ -147,7 +148,7 @@ def handle_attachment(message, userid, bot):
     try:
         mid = message.get('mid')
     except:
-        mid = "GIFXXXXXXXXXXXXXX"
+        mid = "GIF-MID"
     if database: db.add_conversation(userid,'User','<GIF>')
     if database: db.add_conversation(userid, 'Bot', "<GIF>")
     log.info("Bot's response to user {1} gif:  '{0}'".format('<GIF>', str(userid)))
