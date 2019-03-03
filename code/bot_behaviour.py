@@ -97,7 +97,7 @@ def add_new_user(user_id):
         users.append(user_id)
     else:
         #TODO withdraw more info from the database.
-        if database: db.query(user_id, (first_name,last_name))
+        if database: db.query(user_id, ('first_name','last_name'))
 
 def handle_text(message, userid, bot):
     """ React when the user sends any text. """

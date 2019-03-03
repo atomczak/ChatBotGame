@@ -17,13 +17,19 @@ class DB_Connection():
         self.db_name = DB_NAME
 
     def __enter__(self):
-        self.cnx = mysql.connector.connect(**self.db_config)
-        self.cursor = self.cnx.cursor()
-        self.cursor.execute("USE {}".format(self.db_name))
-        return self.cnx, self.cursor
+        try:
+            self.cnx = mysql.connector.connect(**self.db_config)
+            self.cursor = self.cnx.cursor()
+            self.cursor.execute("USE {}".format(self.db_name))
+            return self.cnx, self.cursor
+        except:
+            log.error("Unhandled error during DB connection")
 
     def __exit__(self, *args):
-        self.cnx.close()
+        try:
+            self.cnx.close()
+        except:
+            log.error("Unhandled error during DB connection closure")
 
 def set_up_db(db_config):
     try:
@@ -37,17 +43,25 @@ def set_up_db(db_config):
             log.error("Database does not exist")
         else:
             log.error(str(err))
+    except:
+        log.error("Unhandled error during DB connection")
+
     try:
         cursor.execute("CREATE DATABASE {} "
                        "DEFAULT CHARACTER SET utf8mb4".format(DB_NAME))
         log.info("Database created")
     except mysql.connector.Error as err:
         log.info("Failed creating database: {}".format(err))
+    except:
+        log.error("Unhandled error during DB creation")
+
     try:
         cursor.execute("USE {}".format(DB_NAME))
         log.info("Database chosen")
     except mysql.connector.Error as err:
         log.error("Failed choosing database: {}".format(err))
+    except:
+        log.error("Unhandled error during DB choice")
 
     for table_name in db_tables:
         table_description = db_tables[table_name]
@@ -59,9 +73,15 @@ def set_up_db(db_config):
                 log.info("Table already exists")
             else:
                 log.error(str(err.msg))
+        except:
+            log.error("Unhandled error during tables creation")
+
         else:
             log.info("OK")
-    cnx.close()
+    try:
+        cnx.close()
+    except:
+        log.error("Unhandled error during DB connection closure")
 
 def create_player(facebook_id, first_name=None, last_name=None, gender=None):
     with DB_Connection(db_config, DB_NAME) as (cnx, cursor):
@@ -201,13 +221,14 @@ db_tables['conversations'] = (
     "     REFERENCES `players` (`facebook_id`) ON DELETE CASCADE"
     ") ENGINE=InnoDB")
 
-local_config =  tokens.local_config
 
+"""SETUP"""
+
+local_config = False
 
 if local_config:
     db_config = tokens.local_config
 else:
     db_config = tokens.pythonanywhere_config
 
-"""SETUP"""
 set_up_db(db_config)
