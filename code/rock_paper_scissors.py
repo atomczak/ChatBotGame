@@ -61,7 +61,7 @@ def play(user_message = "", userid="", bot=""):
             db.add_conversation(userid, 'Bot', entry_message)
         log.info("User #{0} started a new RPS game with: '{1}'.".format(str(userid)[0:4], str(user_message)))
         return "Game started"
-    elif choice == "✊ rock" or choice == "✊ paper" or choice == "✌ scissors":
+    elif choice == "✊ rock" or choice == "✋ paper" or choice == "✌ scissors":
         log.info("User chose: "+str(choice))
         game_outcome = play_a_round(userid, choice)
         if game_outcome[0] == -1:
