@@ -20,17 +20,17 @@ def play_a_round(userid, user_choice):
     if user_choice == bot_choice:
         game_outcome = -1
     elif user_choice == '✊ rock':
-        if bot_choice == 'paper':
+        if bot_choice == '✋ paper':
             game_outcome = 0
         else:
             game_outcome = 1
     elif user_choice == '✋ paper':
-        if bot_choice == 'scissors':
+        if bot_choice == '✌ scissors':
             game_outcome = 0
         else:
             game_outcome = 1
     elif user_choice == '✌ scissors':
-        if bot_choice == 'rock':
+        if bot_choice == '✊ rock':
             game_outcome = 0
         else:
             game_outcome = 1
